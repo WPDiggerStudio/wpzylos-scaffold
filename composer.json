@@ -1,0 +1,98 @@
+{
+  "name": "wpdiggerstudio/wpzylos-scaffold",
+  "description": "Template repository for creating production-ready WPZylos-based WordPress plugins with MVC architecture, dependency injection, and PHP-Scoper namespace isolation",
+  "type": "wordpress-plugin",
+  "license": "MIT",
+  "keywords": [
+    "wordpress",
+    "wpzylos",
+    "plugin",
+    "scaffold",
+    "template",
+    "boilerplate",
+    "mvc",
+    "php-scoper",
+    "dependency-injection",
+    "psr-4"
+  ],
+  "homepage": "https://github.com/WPDiggerStudio/wpzylos-scaffold",
+  "authors": [
+    {
+      "name": "WPDiggerStudio",
+      "email": "diggerwp@gmail.com",
+      "homepage": "https://github.com/WPDiggerStudio",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/WPDiggerStudio/wpzylos-scaffold/issues",
+    "source": "https://github.com/WPDiggerStudio/wpzylos-scaffold",
+    "docs": "https://wpzylos.com"
+  },
+  "require": {
+    "php": "^8.0",
+    "wpdiggerstudio/wpzylos-config": "^1.0",
+    "wpdiggerstudio/wpzylos-container": "^1.0",
+    "wpdiggerstudio/wpzylos-core": "^1.0",
+    "wpdiggerstudio/wpzylos-database": "^1.0",
+    "wpdiggerstudio/wpzylos-hooks": "^1.0",
+    "wpdiggerstudio/wpzylos-http": "^1.0",
+    "wpdiggerstudio/wpzylos-i18n": "^1.0",
+    "wpdiggerstudio/wpzylos-migrations": "^1.0",
+    "wpdiggerstudio/wpzylos-routing": "^1.0",
+    "wpdiggerstudio/wpzylos-security": "^1.0",
+    "wpdiggerstudio/wpzylos-validation": "^1.0",
+    "wpdiggerstudio/wpzylos-views": "^1.0"
+  },
+  "require-dev": {
+    "humbug/php-scoper": "^0.18",
+    "phpstan/phpstan": "^1.10",
+    "phpunit/phpunit": "^9.6 || ^10.0",
+    "squizlabs/php_codesniffer": "^3.7",
+    "szepeviktor/phpstan-wordpress": "^1.3",
+    "wpdiggerstudio/wpzylos-wp-cli": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "MyPlugin\\": "app/"
+    },
+    "classmap": [
+      "includes/"
+    ],
+    "files": [
+      "app/Support/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MyPlugin\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "analyze": "phpstan analyze app includes",
+    "cs": "phpcs --standard=PSR12 app",
+    "cs-fix": "phpcbf --standard=PSR12 app",
+    "qa": ["@cs", "@analyze", "@test"]
+  },
+  "extra": {
+    "installer-name": "my-plugin"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "platform": {
+      "php": "8.2"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "funding": [
+    {
+      "type": "paypal",
+      "url": "https://www.paypal.com/donate/?hosted_button_id=66U4L3HG4TLCC"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+# =============================================================================
+# WPZylos Package .gitignore
+# =============================================================================
+
+# =============================================================================
+# Dependencies
+# =============================================================================
+
+# Composer
+/vendor/
+composer.lock
+
+# Node.js (if JS tooling is used)
+/node_modules/
+package-lock.json
+yarn.lock
+
+# =============================================================================
+# Documentation (synced to wpzylos.com)
+# =============================================================================
+
+/docs/
+
+# =============================================================================
+# IDE & Editor Folders
+# =============================================================================
+
+# JetBrains IDEs (PhpStorm, IntelliJ, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# =============================================================================
+# PHP Testing & Quality Tools
+# =============================================================================
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache/
+!phpunit.xml.dist
+
+# Code coverage
+/coverage/
+*.coverage
+clover.xml
+coverage.xml
+
+# PHPStan
+phpstan.neon
+!phpstan.neon.dist
+
+# PHP CS Fixer
+.php-cs-fixer.cache
+.php_cs.cache
+
+# =============================================================================
+# Build & Cache Artifacts
+# =============================================================================
+
+# Cache
+*.cache
+.cache/
+
+# Build output
+/build/
+/dist/
+
+# Temporary files
+.tmp/
+*.tmp
+*.bak
+
+# Log files
+*.log
+
+# =============================================================================
+# Environment & Secrets
+# =============================================================================
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.dist
+
+# Local configuration
+*.local.php
