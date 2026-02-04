@@ -131,7 +131,7 @@ run_phpcbf() {
     
     if [[ -f "vendor/bin/phpcbf" ]]; then
         set +e
-        vendor/bin/phpcbf --standard=PSR12 app includes 2>&1
+        vendor/bin/phpcbf --standard=PSR12 app 2>&1
         RESULT=$?
         set -e
         
@@ -152,7 +152,7 @@ run_phpstan() {
     
     if [[ -f "vendor/bin/phpstan" ]]; then
         set +e
-        vendor/bin/phpstan analyze app includes --no-progress 2>&1
+        vendor/bin/phpstan analyze app --no-progress 2>&1
         RESULT=$?
         set -e
         
@@ -226,7 +226,7 @@ else
     print_step "Skipping PHP-Scoper (dev build)..."
     mkdir -p "$BUILD_DIR"
     
-    for dir in app bootstrap config database includes resources routes vendor; do
+    for dir in app bootstrap config database resources routes vendor; do
         if [[ -d "$dir" ]]; then
             cp -r "$dir" "$BUILD_DIR/"
         fi
