@@ -1,10 +1,12 @@
 #!/bin/bash
 # ============================================================================
-# WPZylos Scaffold - Plugin Initializer
+# WPZylos Scaffold - Plugin Initializer (Intelligent)
 # ============================================================================
-# This script automates the customization of wpzylos-scaffold for new plugins.
-# After initialization, configuration is saved to .plugin-config.json for
-# the build script to use.
+# Handles all scenarios:
+# - Fresh install (my-plugin.php exists)
+# - Re-configuration (update existing config)
+# - Config deleted (detect from renamed files)
+# - Partial updates (only change specific values)
 #
 # Location: .scripts/init-plugin.sh
 # Called by: ../scaffold.sh
@@ -26,6 +28,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 GRAY='\033[0;37m'
+WHITE='\033[1;37m'
 NC='\033[0m'
 
 # ============================================================================
@@ -50,6 +53,10 @@ print_step() {
 
 print_done() {
     echo -e "${GREEN}Done${NC}"
+}
+
+print_skip() {
+    echo -e "${GRAY}Skipped${NC}"
 }
 
 # Convert "My Awesome Plugin" to "my-awesome-plugin"
@@ -77,7 +84,7 @@ to_vendor() {
     echo "$1" | tr -d ' ' | tr '[:upper:]' '[:lower:]'
 }
 
-# Read with default value
+# Read with default value, showing current if exists
 read_with_default() {
     local prompt="$1"
     local default="$2"
@@ -92,7 +99,6 @@ replace_in_file() {
     local find="$2"
     local replace="$3"
     if [[ -f "$file" ]]; then
-        # Escape backslashes in replace string for sed
         local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
         if [[ "$OSTYPE" == "darwin"* ]]; then
             sed -i '' "s|${find}|${escaped_replace}|g" "$file"
@@ -106,10 +112,9 @@ replace_in_file() {
 replace_in_all_files() {
     local find="$1"
     local replace="$2"
-    # Escape backslashes in replace string for sed
     local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
     find . -type f \( -name "*.php" -o -name "*.json" -o -name "*.txt" -o -name "*.md" \) \
-        -not -path "./vendor/*" -not -path "./.git/*" | while read -r file; do
+        -not -path "./vendor/*" -not -path "./.git/*" -not -path "./.scripts/*" | while read -r file; do
         if grep -qF "$find" "$file" 2>/dev/null; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
                 sed -i '' "s|${find}|${escaped_replace}|g" "$file"
@@ -147,77 +152,177 @@ save_plugin_config() {
 EOF
 }
 
+# Detect current state
+detect_state() {
+    IS_FRESH=false
+    HAS_CONFIG=false
+    CURRENT_SLUG=""
+    CURRENT_NAME=""
+    CURRENT_NAMESPACE=""
+    CURRENT_SCOPER_PREFIX=""
+    CURRENT_DB_PREFIX=""
+    CURRENT_AUTHOR_NAME=""
+    CURRENT_AUTHOR_URI=""
+    CURRENT_VENDOR=""
+    
+    # Check for config file
+    if [[ -f ".plugin-config.json" ]]; then
+        HAS_CONFIG=true
+        CURRENT_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
+        CURRENT_SLUG=$(grep -o '"slug": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_NAMESPACE=$(grep -o '"namespace": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_SCOPER_PREFIX=$(grep -o '"scoperPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_DB_PREFIX=$(grep -o '"dbPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_AUTHOR_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | tail -1 | cut -d'"' -f4)
+        CURRENT_AUTHOR_URI=$(grep -o '"uri": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
+        CURRENT_VENDOR=$(grep -o '"vendor": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+    fi
+    
+    # Check for fresh install
+    if [[ -f "my-plugin.php" ]]; then
+        IS_FRESH=true
+    fi
+    
+    # If no config but not fresh, try to detect from files
+    if [[ "$HAS_CONFIG" == "false" && "$IS_FRESH" == "false" ]]; then
+        # Find the main plugin file (*.php with Plugin Name header in root)
+        MAIN_FILE=$(grep -l "Plugin Name:" *.php 2>/dev/null | head -1)
+        if [[ -n "$MAIN_FILE" ]]; then
+            CURRENT_SLUG="${MAIN_FILE%.php}"
+            CURRENT_NAME=$(grep -oP "Plugin Name:\s*\K.*" "$MAIN_FILE" | head -1 | xargs)
+            # Try to detect namespace from composer.json
+            if [[ -f "composer.json" ]]; then
+                CURRENT_NAMESPACE=$(grep -oP '"[^"]+\\\\\\\\": "app/"' composer.json 2>/dev/null | head -1 | cut -d'"' -f2 | sed 's/\\\\//g')
+            fi
+        fi
+    fi
+}
+
 # ============================================================================
 # Main Script
 # ============================================================================
 
 print_header
 
-# Check if we're in the scaffold directory
-if [[ ! -f "my-plugin.php" ]]; then
-    echo -e "${RED}Error: 'my-plugin.php' not found.${NC}"
-    echo -e "${RED}Please run this script from the wpzylos-scaffold root directory.${NC}"
-    exit 1
-fi
+# Detect current state
+detect_state
 
-# Check if already initialized
-if [[ -f ".plugin-config.json" ]]; then
-    echo -e "${YELLOW}Warning: Plugin already initialized.${NC}"
-    EXISTING_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
-    echo -e "${GRAY}  Current plugin: $EXISTING_NAME${NC}"
-    read -p "Re-initialize? [y/N]: " CONTINUE
-    if [[ "$CONTINUE" != "y" && "$CONTINUE" != "Y" ]]; then
-        exit 0
-    fi
+# Show current status
+if [[ "$IS_FRESH" == "true" ]]; then
+    echo -e "${GREEN}Fresh scaffold detected.${NC}"
+    echo ""
+elif [[ "$HAS_CONFIG" == "true" ]]; then
+    echo -e "${CYAN}Current Configuration:${NC}"
+    echo -e "  ${GRAY}Plugin Name:${NC}  $CURRENT_NAME"
+    echo -e "  ${GRAY}Slug:${NC}         $CURRENT_SLUG"
+    echo -e "  ${GRAY}Namespace:${NC}    $CURRENT_NAMESPACE"
+    echo -e "  ${GRAY}DB Prefix:${NC}    $CURRENT_DB_PREFIX"
+    echo -e "  ${GRAY}Vendor:${NC}       $CURRENT_VENDOR"
+    echo ""
+    echo -e "${YELLOW}You can update any value or press Enter to keep current.${NC}"
+    echo ""
+elif [[ -n "$CURRENT_SLUG" ]]; then
+    echo -e "${YELLOW}Config file missing but plugin detected: $CURRENT_SLUG${NC}"
+    echo -e "${GRAY}Values will be auto-detected where possible.${NC}"
+    echo ""
+else
+    echo -e "${RED}Error: Cannot detect plugin state.${NC}"
+    echo -e "${RED}Expected 'my-plugin.php' for fresh install or '.plugin-config.json' for existing.${NC}"
+    exit 1
 fi
 
 # ============================================================================
 # Collect Information
 # ============================================================================
 
-echo "Enter your plugin display name (e.g., 'My Awesome Plugin'):"
-read -p "> " PLUGIN_NAME
-
-if [[ -z "$PLUGIN_NAME" ]]; then
-    echo -e "${RED}Error: Plugin name is required.${NC}"
-    exit 1
+# Set defaults based on state
+if [[ "$IS_FRESH" == "true" ]]; then
+    DEFAULT_NAME="My Plugin"
+    DEFAULT_SLUG="my-plugin"
+    DEFAULT_NAMESPACE="MyPlugin"
+    DEFAULT_SCOPER_PREFIX="my_plugin"
+    DEFAULT_DB_PREFIX="myplugin_"
+    DEFAULT_AUTHOR_NAME="Your Name"
+    DEFAULT_AUTHOR_URI="https://example.com"
+    DEFAULT_VENDOR="yourname"
+else
+    DEFAULT_NAME="${CURRENT_NAME:-My Plugin}"
+    DEFAULT_SLUG="${CURRENT_SLUG:-my-plugin}"
+    DEFAULT_NAMESPACE="${CURRENT_NAMESPACE:-MyPlugin}"
+    DEFAULT_SCOPER_PREFIX="${CURRENT_SCOPER_PREFIX:-my_plugin}"
+    DEFAULT_DB_PREFIX="${CURRENT_DB_PREFIX:-myplugin_}"
+    DEFAULT_AUTHOR_NAME="${CURRENT_AUTHOR_NAME:-Your Name}"
+    DEFAULT_AUTHOR_URI="${CURRENT_AUTHOR_URI:-https://example.com}"
+    DEFAULT_VENDOR="${CURRENT_VENDOR:-yourname}"
 fi
 
-# Derive defaults
-DEFAULT_SLUG=$(to_slug "$PLUGIN_NAME")
-DEFAULT_NAMESPACE=$(to_namespace "$DEFAULT_SLUG")
-DEFAULT_SCOPER_PREFIX=$(to_scoper_prefix "$DEFAULT_SLUG")
-DEFAULT_DB_PREFIX=$(to_db_prefix "$DEFAULT_SLUG")
+echo "Enter your plugin display name (or press Enter to keep current):"
+PLUGIN_NAME=$(read_with_default "> Plugin Name" "$DEFAULT_NAME")
+
+# Only derive new values if name changed
+if [[ "$PLUGIN_NAME" != "$DEFAULT_NAME" ]]; then
+    DERIVED_SLUG=$(to_slug "$PLUGIN_NAME")
+    DERIVED_NAMESPACE=$(to_namespace "$DERIVED_SLUG")
+    DERIVED_SCOPER_PREFIX=$(to_scoper_prefix "$DERIVED_SLUG")
+    DERIVED_DB_PREFIX=$(to_db_prefix "$DERIVED_SLUG")
+else
+    DERIVED_SLUG="$DEFAULT_SLUG"
+    DERIVED_NAMESPACE="$DEFAULT_NAMESPACE"
+    DERIVED_SCOPER_PREFIX="$DEFAULT_SCOPER_PREFIX"
+    DERIVED_DB_PREFIX="$DEFAULT_DB_PREFIX"
+fi
 
 echo ""
-echo "Derived values (press Enter to accept, or type to override):"
+echo "Derived/Current values (press Enter to accept, or type to override):"
 
-PLUGIN_SLUG=$(read_with_default "  Plugin Slug" "$DEFAULT_SLUG")
-NAMESPACE=$(read_with_default "  PHP Namespace" "$DEFAULT_NAMESPACE")
-SCOPER_PREFIX=$(read_with_default "  Scoper Prefix" "$DEFAULT_SCOPER_PREFIX")
-DB_PREFIX=$(read_with_default "  Database Prefix" "$DEFAULT_DB_PREFIX")
+PLUGIN_SLUG=$(read_with_default "  Plugin Slug" "$DERIVED_SLUG")
+NAMESPACE=$(read_with_default "  PHP Namespace" "$DERIVED_NAMESPACE")
+SCOPER_PREFIX=$(read_with_default "  Scoper Prefix" "$DERIVED_SCOPER_PREFIX")
+DB_PREFIX=$(read_with_default "  Database Prefix" "$DERIVED_DB_PREFIX")
 
 echo ""
-echo "Author information (press Enter to skip):"
-AUTHOR_NAME=$(read_with_default "  Author Name" "Your Name")
-AUTHOR_URI=$(read_with_default "  Author URI" "https://example.com")
+echo "Author information (press Enter to keep current):"
+AUTHOR_NAME=$(read_with_default "  Author Name" "$DEFAULT_AUTHOR_NAME")
+AUTHOR_URI=$(read_with_default "  Author URI" "$DEFAULT_AUTHOR_URI")
 PLUGIN_URI=$(read_with_default "  Plugin URI" "https://example.com/$PLUGIN_SLUG")
 
 # Vendor name
-DEFAULT_VENDOR=$(to_vendor "$AUTHOR_NAME")
-VENDOR_NAME=$(read_with_default "  Vendor Name (for composer)" "$DEFAULT_VENDOR")
+if [[ "$AUTHOR_NAME" != "$DEFAULT_AUTHOR_NAME" ]]; then
+    NEW_DEFAULT_VENDOR=$(to_vendor "$AUTHOR_NAME")
+else
+    NEW_DEFAULT_VENDOR="$DEFAULT_VENDOR"
+fi
+VENDOR_NAME=$(read_with_default "  Vendor Name (for composer)" "$NEW_DEFAULT_VENDOR")
 
-VERSION="1.0.0"
+VERSION="${CURRENT_VERSION:-1.0.0}"
+
+# Determine what needs to change
+OLD_NAME="${CURRENT_NAME:-My Plugin}"
+OLD_SLUG="${CURRENT_SLUG:-my-plugin}"
+OLD_NAMESPACE="${CURRENT_NAMESPACE:-MyPlugin}"
+OLD_SCOPER_PREFIX="${CURRENT_SCOPER_PREFIX:-my_plugin}"
+OLD_DB_PREFIX="${CURRENT_DB_PREFIX:-myplugin_}"
+OLD_VENDOR="${CURRENT_VENDOR:-wpdiggerstudio}"
+
+# For fresh install, use scaffold defaults
+if [[ "$IS_FRESH" == "true" ]]; then
+    OLD_NAME="My Plugin"
+    OLD_SLUG="my-plugin"
+    OLD_NAMESPACE="MyPlugin"
+    OLD_SCOPER_PREFIX="my_plugin"
+    OLD_DB_PREFIX="myplugin_"
+    OLD_VENDOR="wpdiggerstudio"
+fi
 
 echo ""
-echo "Summary:"
-echo -e "${GRAY}  Plugin Name:    $PLUGIN_NAME${NC}"
-echo -e "${GRAY}  Plugin Slug:    $PLUGIN_SLUG${NC}"
-echo -e "${GRAY}  Namespace:      $NAMESPACE${NC}"
-echo -e "${GRAY}  Scoper Prefix:  $SCOPER_PREFIX${NC}"
-echo -e "${GRAY}  DB Prefix:      $DB_PREFIX${NC}"
-echo -e "${GRAY}  Vendor:         $VENDOR_NAME${NC}"
-echo -e "${GRAY}  Composer Name:  $VENDOR_NAME/$PLUGIN_SLUG${NC}"
+echo -e "${WHITE}Summary:${NC}"
+echo -e "  ${GRAY}Plugin Name:${NC}    $PLUGIN_NAME"
+echo -e "  ${GRAY}Plugin Slug:${NC}    $PLUGIN_SLUG"
+echo -e "  ${GRAY}Namespace:${NC}      $NAMESPACE"
+echo -e "  ${GRAY}Scoper Prefix:${NC}  $SCOPER_PREFIX"
+echo -e "  ${GRAY}DB Prefix:${NC}      $DB_PREFIX"
+echo -e "  ${GRAY}Vendor:${NC}         $VENDOR_NAME"
+echo -e "  ${GRAY}Composer Name:${NC}  $VENDOR_NAME/$PLUGIN_SLUG"
 echo ""
 
 read -p "Proceed with initialization? [Y/n]: " CONFIRM
@@ -229,66 +334,101 @@ fi
 echo ""
 
 # ============================================================================
-# Perform Replacements
+# Perform Replacements (only if values changed)
 # ============================================================================
 
 TOTAL_STEPS=10
+MAIN_PLUGIN_FILE="${OLD_SLUG}.php"
+if [[ "$IS_FRESH" == "true" ]]; then
+    MAIN_PLUGIN_FILE="my-plugin.php"
+fi
 
 # Step 1: Replace display name
-print_step 1 $TOTAL_STEPS "Replacing display name 'My Plugin'"
-replace_in_all_files "My Plugin" "$PLUGIN_NAME"
-print_done
+print_step 1 $TOTAL_STEPS "Replacing display name"
+if [[ "$PLUGIN_NAME" != "$OLD_NAME" ]]; then
+    replace_in_all_files "$OLD_NAME" "$PLUGIN_NAME"
+    print_done
+else
+    print_skip
+fi
 
-# Step 2: Replace plugin slug (hyphenated)
-print_step 2 $TOTAL_STEPS "Replacing plugin slug 'my-plugin'"
-replace_in_all_files "my-plugin" "$PLUGIN_SLUG"
-print_done
+# Step 2: Replace plugin slug
+print_step 2 $TOTAL_STEPS "Replacing plugin slug"
+if [[ "$PLUGIN_SLUG" != "$OLD_SLUG" ]]; then
+    replace_in_all_files "$OLD_SLUG" "$PLUGIN_SLUG"
+    print_done
+else
+    print_skip
+fi
 
 # Step 3: Replace namespace
-print_step 3 $TOTAL_STEPS "Replacing namespace 'MyPlugin'"
-replace_in_all_files "MyPlugin" "$NAMESPACE"
-print_done
+print_step 3 $TOTAL_STEPS "Replacing namespace"
+if [[ "$NAMESPACE" != "$OLD_NAMESPACE" ]]; then
+    replace_in_all_files "$OLD_NAMESPACE" "$NAMESPACE"
+    print_done
+else
+    print_skip
+fi
 
-# Step 4: Replace scoper prefix (underscored)
-print_step 4 $TOTAL_STEPS "Replacing scoper prefix 'my_plugin'"
-replace_in_file "scoper.inc.php" "my_plugin" "$SCOPER_PREFIX"
-print_done
+# Step 4: Replace scoper prefix
+print_step 4 $TOTAL_STEPS "Replacing scoper prefix"
+if [[ "$SCOPER_PREFIX" != "$OLD_SCOPER_PREFIX" ]]; then
+    replace_in_file "scoper.inc.php" "$OLD_SCOPER_PREFIX" "$SCOPER_PREFIX"
+    print_done
+else
+    print_skip
+fi
 
 # Step 5: Replace database prefix
-print_step 5 $TOTAL_STEPS "Replacing database prefix 'myplugin_'"
-replace_in_all_files "myplugin_" "$DB_PREFIX"
-print_done
+print_step 5 $TOTAL_STEPS "Replacing database prefix"
+if [[ "$DB_PREFIX" != "$OLD_DB_PREFIX" ]]; then
+    replace_in_all_files "$OLD_DB_PREFIX" "$DB_PREFIX"
+    print_done
+else
+    print_skip
+fi
 
 # Step 6: Replace global variable
 print_step 6 $TOTAL_STEPS "Replacing global variable name"
-GLOBAL_VAR_OLD='\$my_plugin_context'
-GLOBAL_VAR_NEW='\$'"$(echo "$PLUGIN_SLUG" | tr '-' '_')"'_context'
-replace_in_file "my-plugin.php" "$GLOBAL_VAR_OLD" "$GLOBAL_VAR_NEW"
-print_done
+if [[ "$PLUGIN_SLUG" != "$OLD_SLUG" ]]; then
+    OLD_GLOBAL_VAR="\$$(echo "$OLD_SLUG" | tr '-' '_')_context"
+    NEW_GLOBAL_VAR="\$$(echo "$PLUGIN_SLUG" | tr '-' '_')_context"
+    replace_in_file "$MAIN_PLUGIN_FILE" "$OLD_GLOBAL_VAR" "$NEW_GLOBAL_VAR"
+    print_done
+else
+    print_skip
+fi
 
 # Step 7: Update composer.json package name
 print_step 7 $TOTAL_STEPS "Updating composer.json package name"
-replace_in_file "composer.json" "wpdiggerstudio/wpzylos-scaffold" "$VENDOR_NAME/$PLUGIN_SLUG"
-print_done
+if [[ "$VENDOR_NAME" != "$OLD_VENDOR" || "$PLUGIN_SLUG" != "$OLD_SLUG" ]]; then
+    replace_in_file "composer.json" "$OLD_VENDOR/$OLD_SLUG" "$VENDOR_NAME/$PLUGIN_SLUG"
+    # Also update if still has scaffold name
+    replace_in_file "composer.json" "wpdiggerstudio/wpzylos-scaffold" "$VENDOR_NAME/$PLUGIN_SLUG"
+    print_done
+else
+    print_skip
+fi
 
 # Step 8: Update author information
 print_step 8 $TOTAL_STEPS "Updating author information"
-replace_in_file "my-plugin.php" "Your Name" "$AUTHOR_NAME"
-replace_in_file "my-plugin.php" "https://example.com/my-plugin" "$PLUGIN_URI"
-replace_in_file "my-plugin.php" "https://example.com" "$AUTHOR_URI"
+replace_in_file "$MAIN_PLUGIN_FILE" "Your Name" "$AUTHOR_NAME"
+replace_in_file "$MAIN_PLUGIN_FILE" "https://example.com/$OLD_SLUG" "$PLUGIN_URI"
+replace_in_file "$MAIN_PLUGIN_FILE" "https://example.com" "$AUTHOR_URI"
 AUTHOR_USERNAME=$(to_vendor "$AUTHOR_NAME")
 replace_in_file "readme.txt" "your-username" "$AUTHOR_USERNAME"
 print_done
 
 # Step 9: Rename main plugin file
-print_step 9 $TOTAL_STEPS "Renaming my-plugin.php to $PLUGIN_SLUG.php"
-if [[ -f "my-plugin.php" ]]; then
-    replace_in_file "Makefile" "my-plugin.php" "$PLUGIN_SLUG.php"
-    replace_in_file "scoper.inc.php" "my-plugin.php" "$PLUGIN_SLUG.php"
-    replace_in_file "uninstall.php" "my-plugin.php" "$PLUGIN_SLUG.php"
-    mv "my-plugin.php" "$PLUGIN_SLUG.php"
+print_step 9 $TOTAL_STEPS "Renaming plugin file"
+if [[ -f "$MAIN_PLUGIN_FILE" && "$PLUGIN_SLUG" != "$OLD_SLUG" ]]; then
+    replace_in_file "scoper.inc.php" "$MAIN_PLUGIN_FILE" "$PLUGIN_SLUG.php"
+    replace_in_file "uninstall.php" "$MAIN_PLUGIN_FILE" "$PLUGIN_SLUG.php"
+    mv "$MAIN_PLUGIN_FILE" "$PLUGIN_SLUG.php"
+    print_done
+else
+    print_skip
 fi
-print_done
 
 # Step 10: Save configuration
 print_step 10 $TOTAL_STEPS "Saving plugin configuration"
@@ -314,18 +454,10 @@ fi
 
 echo ""
 echo -e "${GREEN}=============================================${NC}"
-echo -e "${GREEN}  Plugin '$PLUGIN_NAME' initialized!${NC}"
+echo -e "${GREEN}  Plugin '$PLUGIN_NAME' configured!${NC}"
 echo -e "${GREEN}=============================================${NC}"
 echo ""
 echo "Configuration saved to: .plugin-config.json"
-echo ""
-echo "Files modified:"
-echo -e "${GRAY}  - $PLUGIN_SLUG.php (main plugin file)${NC}"
-echo -e "${GRAY}  - composer.json (package: $VENDOR_NAME/$PLUGIN_SLUG)${NC}"
-echo -e "${GRAY}  - scoper.inc.php${NC}"
-echo -e "${GRAY}  - Makefile${NC}"
-echo -e "${GRAY}  - uninstall.php${NC}"
-echo -e "${GRAY}  - readme.txt${NC}"
 echo ""
 echo "Next steps:"
 echo -e "${GRAY}  1. Run: composer install${NC}"
