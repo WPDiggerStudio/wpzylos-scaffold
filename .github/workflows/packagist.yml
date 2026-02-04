@@ -1,19 +1,31 @@
 name: Packagist Update
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
   push:
     tags:
       - "v*"
+  release:
+    types: [published]
 
 jobs:
   packagist:
-    name: Update Packagist
     runs-on: ubuntu-latest
     steps:
+      - name: Debug secrets presence
+        run: |
+          echo "USERNAME length: ${#PACKAGIST_USERNAME}"
+          echo "TOKEN length: ${#PACKAGIST_TOKEN}"
+          echo "Repository: ${{ github.server_url }}/${{ github.repository }}"
+        env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+
       - name: Notify Packagist
         run: |
-          curl -X POST https://packagist.org/api/update-package \
+          curl --fail-with-body -sS -X POST "https://packagist.org/api/update-package" \
             -H "Content-Type: application/json" \
-            -d '{"repository":{"url":"https://packagist.org/packages/wpdiggerstudio/wpzylos-scaffold"},"apiToken":"${{ secrets.PACKAGIST_TOKEN }}"}'
+            -H "Accept: application/json" \
+            -H "Authorization: Bearer ${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" \
+            -H "User-Agent: github-actions (mailto:diggerwp@gmail.com)" \
+            -d '{"repository":"${{ github.server_url }}/${{ github.repository }}"}'
