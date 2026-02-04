@@ -252,20 +252,20 @@ done
 
 print_success "Essential files copied"
 
-# Step 6: Rebuild autoloader
-print_step "Rebuilding autoloader in build directory..."
+# Step 6: Install production dependencies in build directory
+print_step "Installing production dependencies in build directory..."
 (
     cd "$BUILD_DIR" 2>/dev/null || exit 1
-    if composer dump-autoload --classmap-authoritative 2>&1; then
+    if composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader --classmap-authoritative 2>&1; then
         exit 0
     else
         exit 1
     fi
 )
 if [[ $? -eq 0 ]]; then
-    print_success "Autoloader rebuilt"
+    print_success "Production dependencies installed in build"
 else
-    print_warning "Autoloader rebuild issue (may still work)"
+    print_warning "Composer install issue in build (may still work)"
 fi
 
 # Step 7: Remove development files

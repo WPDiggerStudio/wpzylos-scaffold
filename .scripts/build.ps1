@@ -296,17 +296,17 @@ foreach ($dir in $essentialDirs) {
 
 Write-Success "Essential files copied"
 
-# Step 6: Rebuild autoloader in build directory
-Write-Step "Rebuilding autoloader in build directory..."
+# Step 6: Install production dependencies in build directory
+Write-Step "Installing production dependencies in build directory..."
 Push-Location $BUILD_DIR
-$autoloadResult = & composer dump-autoload --classmap-authoritative 2>&1
+$autoloadResult = & composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader --classmap-authoritative 2>&1
 Pop-Location
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Success "Autoloader rebuilt"
+    Write-Success "Production dependencies installed in build"
 }
 else {
-    Write-Warning "Autoloader rebuild issue (may still work)"
+    Write-Warning "Composer install issue in build (may still work)"
 }
 
 # Step 7: Remove development files from build
