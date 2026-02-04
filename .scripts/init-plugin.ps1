@@ -41,9 +41,14 @@ try {
 
     function Write-Header {
         Write-Host ""
-        Write-Host "=============================================" -ForegroundColor Cyan
-        Write-Host "  WPZylos Scaffold - Plugin Initializer" -ForegroundColor Cyan
-        Write-Host "=============================================" -ForegroundColor Cyan
+        Write-Host "  ██╗    ██╗██████╗ ███████╗██╗   ██╗██╗      ██████╗ ███████╗" -ForegroundColor Blue
+        Write-Host "  ██║    ██║██╔══██╗╚══███╔╝╚██╗ ██╔╝██║     ██╔═══██╗██╔════╝" -ForegroundColor Blue
+        Write-Host "  ██║ █╗ ██║██████╔╝  ███╔╝  ╚████╔╝ ██║     ██║   ██║███████╗" -ForegroundColor Blue
+        Write-Host "  ██║███╗██║██╔═══╝  ███╔╝    ╚██╔╝  ██║     ██║   ██║╚════██║" -ForegroundColor Blue
+        Write-Host "  ╚███╔███╔╝██║     ███████╗   ██║   ███████╗╚██████╔╝███████║" -ForegroundColor Blue
+        Write-Host "   ╚══╝╚══╝ ╚═╝     ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝ ╚══════╝" -ForegroundColor Blue
+        Write-Host ""
+        Write-Host "  Plugin Initializer" -ForegroundColor DarkGray
         Write-Host ""
     }
 

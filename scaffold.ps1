@@ -30,14 +30,14 @@ $VERSION = "1.0.0"
 
 function Write-Logo {
     Write-Host ""
-    Write-Host "  __          _______   _____      _            " -ForegroundColor Cyan
-    Write-Host "  \ \        / /  __ \ |___  |    | |           " -ForegroundColor Cyan
-    Write-Host "   \ \  /\  / /| |__) |   / / ___ | | ___  ___  " -ForegroundColor Cyan
-    Write-Host "    \ \/  \/ / |  ___/   / / / _ \| |/ _ \/ __| " -ForegroundColor Cyan
-    Write-Host "     \  /\  /  | |      / /_| (_) | | (_) \__ \ " -ForegroundColor Cyan
-    Write-Host "      \/  \/   |_|     /_____\___/|_|\___/|___/ " -ForegroundColor Cyan
+    Write-Host "  ██╗    ██╗██████╗ ███████╗██╗   ██╗██╗      ██████╗ ███████╗" -ForegroundColor Blue
+    Write-Host "  ██║    ██║██╔══██╗╚══███╔╝╚██╗ ██╔╝██║     ██╔═══██╗██╔════╝" -ForegroundColor Blue
+    Write-Host "  ██║ █╗ ██║██████╔╝  ███╔╝  ╚████╔╝ ██║     ██║   ██║███████╗" -ForegroundColor Blue
+    Write-Host "  ██║███╗██║██╔═══╝  ███╔╝    ╚██╔╝  ██║     ██║   ██║╚════██║" -ForegroundColor Blue
+    Write-Host "  ╚███╔███╔╝██║     ███████╗   ██║   ███████╗╚██████╔╝███████║" -ForegroundColor Blue
+    Write-Host "   ╚══╝╚══╝ ╚═╝     ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝ ╚══════╝" -ForegroundColor Blue
     Write-Host ""
-    Write-Host "  Scaffold CLI v$VERSION" -ForegroundColor Gray
+    Write-Host "  Scaffold CLI v$VERSION" -ForegroundColor DarkGray
     Write-Host ""
 }
 
