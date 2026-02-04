@@ -254,13 +254,19 @@ print_success "Essential files copied"
 
 # Step 6: Rebuild autoloader
 print_step "Rebuilding autoloader in build directory..."
-pushd "$BUILD_DIR" > /dev/null
-if composer dump-autoload --classmap-authoritative 2>&1; then
+(
+    cd "$BUILD_DIR" 2>/dev/null || exit 1
+    if composer dump-autoload --classmap-authoritative 2>&1; then
+        exit 0
+    else
+        exit 1
+    fi
+)
+if [[ $? -eq 0 ]]; then
     print_success "Autoloader rebuilt"
 else
     print_warning "Autoloader rebuild issue (may still work)"
 fi
-popd > /dev/null
 
 # Step 7: Remove development files
 print_step "Removing development files..."
@@ -303,7 +309,8 @@ mkdir -p "$TEMP_DIR/$PLUGIN_SLUG"
 cp -r "$BUILD_DIR"/* "$TEMP_DIR/$PLUGIN_SLUG/"
 
 # Create ZIP - check for available zip tools
-cd "$TEMP_DIR"
+ORIG_DIR="$(pwd)"
+cd "$TEMP_DIR" 2>/dev/null
 
 # Try native zip first, then 7z, then PowerShell as fallback
 if command -v zip &> /dev/null; then
@@ -320,7 +327,7 @@ else
     fi
 fi
 
-cd - > /dev/null
+cd "$ORIG_DIR" 2>/dev/null
 
 rm -rf "$TEMP_DIR"
 
