@@ -19,6 +19,7 @@ Template repository for creating **production-ready WordPress plugins** with MVC
 - **Service Providers** — Modular dependency injection
 - **Database Migrations** — Version-controlled schema changes
 - **WordPress Compliant** — Proper headers, MIT license, readme.txt
+- **Intelligent CLI** — Version prompting, smart file discovery, auto-versioning
 - **Build Pipeline** — Scaffold CLI with QA checks and ZIP creation
 - **Security First** — Nonce verification, capability checks, input sanitization
 
@@ -106,7 +107,10 @@ The **intelligent init script** handles all scenarios:
 | **Config deleted** | Auto-detects plugin from `*.php` with "Plugin Name:" header   |
 | **Partial update** | Only changes modified values, shows "Skipped" for unchanged   |
 
-**Namespace support:** Supports nested namespaces like `WPDigger\WPBraCalculator` or `KYNetCode\WP\Bra\Calculator`.
+**Features:**
+
+- **Version Prompting:** Sets initial version and updates plugin header + PluginContext
+- **Namespace support:** Supports nested namespaces like `WPDigger\WPBraCalculator`
 
 ---
 
@@ -361,6 +365,13 @@ The build script will:
 8. Create versioned ZIP in `dist/`
 
 > **Note:** The build script reads configuration from `.plugin-config.json` (created by `scaffold init`).
+
+**Intelligent Features:**
+
+- **Smart File Discovery:** Automatically detects project files/folders and prompts for unknown items
+- **Preference Persistence:** Saves your include/exclude choices for future builds
+- **Auto-Versioning:** Suggests next patch version based on existing ZIP files in `dist/`
+- **Artifact Preservation:** Preserves the `dist/` directory with previous builds
 
 The production build creates a zip file at `dist/your-plugin-1.0.0.zip` ready for deployment.
 
