@@ -75,7 +75,6 @@ clover.xml
 coverage.xml
 
 # PHPStan
-phpstan.neon
 !phpstan.neon.dist
 
 # PHP CS Fixer
