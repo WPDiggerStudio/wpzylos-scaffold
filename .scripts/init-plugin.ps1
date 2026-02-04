@@ -93,6 +93,13 @@ try {
         return ($AuthorName -replace '\s+', '').ToLower()
     }
 
+    # Convert namespace to JSON format (double backslashes for JSON escaping)
+    # KYNetCode\BraCalculator -> KYNetCode\\BraCalculator
+    function ConvertTo-JsonNamespace {
+        param([string]$Namespace)
+        return $Namespace -replace '\\', '\\'
+    }
+
     function Read-WithDefault {
         param([string]$Prompt, [string]$Default)
         $userInput = Read-Host "$Prompt [$Default]"
@@ -301,7 +308,14 @@ try {
         Write-Host "Author information (press Enter to keep current):" -ForegroundColor White
         $AuthorName = Read-WithDefault "  Author Name" $defaultAuthorName
         $AuthorUri = Read-WithDefault "  Author URI" $defaultAuthorUri
-        $PluginUri = Read-WithDefault "  Plugin URI" "https://example.com/$PluginSlug"
+        # Plugin URI - derive from Author URI if available
+        $derivedPluginUri = if ($AuthorUri -and $AuthorUri -ne "https://example.com") {
+            "$AuthorUri/$PluginSlug"
+        }
+        else {
+            "https://example.com/$PluginSlug"
+        }
+        $PluginUri = Read-WithDefault "  Plugin URI" $derivedPluginUri
     
         # Vendor name
         if ($AuthorName -ne $defaultAuthorName) {
@@ -397,7 +411,12 @@ try {
     # Step 3: Replace namespace
     Write-Step 3 $totalSteps "Replacing namespace"
     if ($Namespace -ne $oldNamespace) {
-        Replace-InAllFiles -Find $oldNamespace -Replace $Namespace
+        # For PHP, TXT, MD files - use single backslash namespace
+        Replace-InAllFiles -Find $oldNamespace -Replace $Namespace -Extensions @('*.php', '*.txt', '*.md')
+        # For JSON files - use double backslash namespace (JSON escaping)
+        $oldJsonNamespace = ConvertTo-JsonNamespace $oldNamespace
+        $newJsonNamespace = ConvertTo-JsonNamespace $Namespace
+        Replace-InAllFiles -Find $oldJsonNamespace -Replace $newJsonNamespace -Extensions @('*.json')
         Write-Done
     }
     else {

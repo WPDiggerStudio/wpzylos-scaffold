@@ -328,7 +328,13 @@ echo ""
 echo "Author information (press Enter to keep current):"
 AUTHOR_NAME=$(read_with_default "  Author Name" "$DEFAULT_AUTHOR_NAME")
 AUTHOR_URI=$(read_with_default "  Author URI" "$DEFAULT_AUTHOR_URI")
-PLUGIN_URI=$(read_with_default "  Plugin URI" "https://example.com/$PLUGIN_SLUG")
+# Plugin URI - derive from Author URI if available
+if [[ "$AUTHOR_URI" != "https://example.com" && -n "$AUTHOR_URI" ]]; then
+    DERIVED_PLUGIN_URI="$AUTHOR_URI/$PLUGIN_SLUG"
+else
+    DERIVED_PLUGIN_URI="https://example.com/$PLUGIN_SLUG"
+fi
+PLUGIN_URI=$(read_with_default "  Plugin URI" "$DERIVED_PLUGIN_URI")
 
 # Vendor name
 if [[ "$AUTHOR_NAME" != "$DEFAULT_AUTHOR_NAME" ]]; then
