@@ -60,7 +60,7 @@ composer install
 
 ### Initialize Your Plugin (Recommended)
 
-After creating your project, run the **scaffold CLI** to customize and manage your plugin:
+After creating your project, run the **Scaffold CLI** to customize and manage your plugin:
 
 **Windows (PowerShell):**
 
@@ -73,20 +73,22 @@ After creating your project, run the **scaffold CLI** to customize and manage yo
 **Linux/Mac:**
 
 ```bash
-chmod +x scaffold
-./scaffold.sh               # Interactive menu
-./scaffold.sh init          # Initialize plugin directly
-./scaffold.sh build         # Build for production directly
+chmod +x scaffold.sh
+./scaffold.sh            # Interactive menu
+./scaffold.sh init       # Initialize plugin directly
+./scaffold.sh build      # Build for production directly
 ```
 
-The script will:
+The **intelligent init script** handles all scenarios:
 
-1. Prompt for your plugin name (e.g., "My Awesome Plugin")
-2. Auto-derive slug, namespace, prefixes, and vendor name
-3. Update `composer.json` package name
-4. Perform all search-and-replace operations
-5. Rename the main plugin file
-6. Save configuration to `.plugin-config.json` (used by build script)
+| Scenario           | Behavior                                                      |
+| ------------------ | ------------------------------------------------------------- |
+| **Fresh install**  | Detects `my-plugin.php`, uses scaffold defaults               |
+| **Re-configure**   | Loads `.plugin-config.json`, shows current values as defaults |
+| **Config deleted** | Auto-detects plugin from `*.php` with "Plugin Name:" header   |
+| **Partial update** | Only changes modified values, shows "Skipped" for unchanged   |
+
+**Namespace support:** Supports nested namespaces like `WPDigger\WPBraCalculator` or `KYNetCode\WP\Bra\Calculator`.
 
 ---
 
@@ -117,7 +119,7 @@ your-plugin/
 ├── tests/
 │   └── Unit/                   # PHPUnit tests
 ├── scaffold.ps1                # Scaffold CLI (Windows)
-├── scaffold                    # Scaffold CLI (Linux/Mac)
+├── scaffold.sh                 # Scaffold CLI (Linux/Mac)
 ├── .scripts/                   # CLI scripts
 │   ├── init-plugin.ps1/.sh     # Initialization logic
 │   └── build.ps1/.sh           # Build pipeline logic
