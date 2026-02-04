@@ -109,6 +109,9 @@ try {
         return $userInput
     }
 
+    # UTF8 encoding without BOM
+    $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
     function Replace-InFile {
         param(
             [string]$FilePath,
@@ -116,9 +119,10 @@ try {
             [string]$Replace
         )
         if (Test-Path $FilePath) {
-            $content = Get-Content $FilePath -Raw -Encoding UTF8
+            $fullPath = (Resolve-Path $FilePath).Path
+            $content = [System.IO.File]::ReadAllText($fullPath, $Utf8NoBom)
             $content = $content -replace [regex]::Escape($Find), $Replace
-            Set-Content $FilePath -Value $content -Encoding UTF8 -NoNewline
+            [System.IO.File]::WriteAllText($fullPath, $content, $Utf8NoBom)
         }
     }
 
@@ -133,10 +137,10 @@ try {
             Get-ChildItem -Path . -Recurse -Filter $ext -File | 
             Where-Object { $_.FullName -notmatch '[\\/]vendor[\\/]' -and $_.FullName -notmatch '[\\/]\.git[\\/]' -and $_.FullName -notmatch '[\\/]\.scripts[\\/]' } |
             ForEach-Object {
-                $content = Get-Content $_.FullName -Raw -Encoding UTF8
+                $content = [System.IO.File]::ReadAllText($_.FullName, $Utf8NoBom)
                 if ($content -match [regex]::Escape($Find)) {
                     $content = $content -replace [regex]::Escape($Find), $Replace
-                    Set-Content $_.FullName -Value $content -Encoding UTF8 -NoNewline
+                    [System.IO.File]::WriteAllText($_.FullName, $content, $Utf8NoBom)
                 }
             }
         }
@@ -145,7 +149,9 @@ try {
     function Save-PluginConfig {
         param([hashtable]$Config)
         $configPath = ".plugin-config.json"
-        $Config | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8
+        $fullPath = Join-Path $projectRoot $configPath
+        $json = $Config | ConvertTo-Json -Depth 3
+        [System.IO.File]::WriteAllText($fullPath, $json, $Utf8NoBom)
     }
 
     function Get-CurrentState {
