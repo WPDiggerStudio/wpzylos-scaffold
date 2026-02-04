@@ -348,11 +348,9 @@ function Clean-Build {
     if (Test-Path $BUILD_DIR) {
         Remove-Item -Path $BUILD_DIR -Recurse -Force
     }
-    if (Test-Path $DIST_DIR) {
-        Remove-Item -Path $DIST_DIR -Recurse -Force
-    }
+    # Note: dist/ is preserved to keep previous ZIP builds
     
-    Write-Success "Cleaned build directories"
+    Write-Success "Cleaned build directory"
 }
 
 function Run-PHPCBF {

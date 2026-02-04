@@ -333,8 +333,9 @@ save_build_config() {
 
 clean_build() {
     print_step "Cleaning build artifacts..."
-    rm -rf "$BUILD_DIR" "$DIST_DIR"
-    print_success "Cleaned build directories"
+    rm -rf "$BUILD_DIR"
+    # Note: dist/ is preserved to keep previous ZIP builds
+    print_success "Cleaned build directory"
 }
 
 run_phpcbf() {
