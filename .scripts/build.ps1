@@ -158,9 +158,14 @@ if (-not $PSBoundParameters.ContainsKey('Version') -or [string]::IsNullOrWhiteSp
 function Write-Header {
     param([string]$Title)
     Write-Host ""
-    Write-Host "=============================================" -ForegroundColor Cyan
-    Write-Host "  $Title" -ForegroundColor Cyan
-    Write-Host "=============================================" -ForegroundColor Cyan
+    Write-Host "  ██╗    ██╗██████╗ ███████╗██╗   ██╗██╗      ██████╗ ███████╗" -ForegroundColor Blue
+    Write-Host "  ██║    ██║██╔══██╗╚══███╔╝╚██╗ ██╔╝██║     ██╔═══██╗██╔════╝" -ForegroundColor Blue
+    Write-Host "  ██║ █╗ ██║██████╔╝  ███╔╝  ╚████╔╝ ██║     ██║   ██║███████╗" -ForegroundColor Blue
+    Write-Host "  ██║███╗██║██╔═══╝  ███╔╝    ╚██╔╝  ██║     ██║   ██║╚════██║" -ForegroundColor Blue
+    Write-Host "  ╚███╔███╔╝██║     ███████╗   ██║   ███████╗╚██████╔╝███████║" -ForegroundColor Blue
+    Write-Host "   ╚══╝╚══╝ ╚═╝     ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝ ╚══════╝" -ForegroundColor Blue
+    Write-Host ""
+    Write-Host "  $Title" -ForegroundColor DarkGray
     Write-Host ""
 }
 
