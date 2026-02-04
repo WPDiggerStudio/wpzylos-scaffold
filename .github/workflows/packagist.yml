@@ -1,6 +1,7 @@
 name: Packagist Update
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
   push:
@@ -14,6 +15,7 @@ jobs:
     steps:
       - name: Notify Packagist
         run: |
-          curl -X POST https://packagist.org/api/update-package \
+          curl -sS -X POST https://packagist.org/api/update-package \
             -H "Content-Type: application/json" \
-            -d '{"repository":{"url":"https://packagist.org/packages/wpdiggerstudio/wpzylos-scaffold"},"apiToken":"${{ secrets.PACKAGIST_TOKEN }}"}'
+            -H "Authorization: Bearer ${{ secrets.PACKAGIST_TOKEN }}" \
+            -d '{"repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
