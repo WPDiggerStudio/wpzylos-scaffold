@@ -510,14 +510,18 @@ print_done
 
 # Step 8b: Update version in files
 print_step 8 $TOTAL_STEPS "Updating version"
-if [[ "$VERSION" && "$VERSION" != "1.0.0" ]]; then
-    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           1.0.0" "Version:           $VERSION"
-    replace_in_file "readme.txt" "Stable tag: 1.0.0" "Stable tag: $VERSION"
-elif [[ "$CURRENT_VERSION" && "$VERSION" != "$CURRENT_VERSION" ]]; then
-    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           $CURRENT_VERSION" "Version:           $VERSION"
-    replace_in_file "readme.txt" "Stable tag: $CURRENT_VERSION" "Stable tag: $VERSION"
+OLD_VERSION="${CURRENT_VERSION:-1.0.0}"
+if [[ "$VERSION" != "$OLD_VERSION" ]]; then
+    # Update plugin header Version
+    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           $OLD_VERSION" "Version:           $VERSION"
+    # Update PluginContext version
+    replace_in_file "$MAIN_PLUGIN_FILE" "'version' => '$OLD_VERSION'" "'version' => '$VERSION'"
+    # Update readme.txt Stable tag
+    replace_in_file "readme.txt" "Stable tag: $OLD_VERSION" "Stable tag: $VERSION"
+    print_done
+else
+    print_skip
 fi
-print_done
 
 # Step 9: Rename main plugin file
 print_step 9 $TOTAL_STEPS "Renaming plugin file"

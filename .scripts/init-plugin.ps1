@@ -497,15 +497,19 @@ try {
 
     # Step 8b: Update version in files
     Write-Step 8 $totalSteps "Updating version"
-    if ($Version -and $Version -ne "1.0.0") {
-        Replace-InFile -FilePath $mainPluginFile -Find "Version:           1.0.0" -Replace "Version:           $Version"
-        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: 1.0.0" -Replace "Stable tag: $Version"
+    $oldVersion = if ($state.CurrentVersion) { $state.CurrentVersion } else { "1.0.0" }
+    if ($Version -ne $oldVersion) {
+        # Update plugin header Version
+        Replace-InFile -FilePath $mainPluginFile -Find "Version:           $oldVersion" -Replace "Version:           $Version"
+        # Update PluginContext version
+        Replace-InFile -FilePath $mainPluginFile -Find "'version' => '$oldVersion'" -Replace "'version' => '$Version'"
+        # Update readme.txt Stable tag
+        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: $oldVersion" -Replace "Stable tag: $Version"
+        Write-Done
     }
-    elseif ($state.CurrentVersion -and $Version -ne $state.CurrentVersion) {
-        Replace-InFile -FilePath $mainPluginFile -Find "Version:           $($state.CurrentVersion)" -Replace "Version:           $Version"
-        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: $($state.CurrentVersion)" -Replace "Stable tag: $Version"
+    else {
+        Write-Skip
     }
-    Write-Done
 
     # Step 9: Rename main plugin file
     Write-Step 9 $totalSteps "Renaming plugin file"
