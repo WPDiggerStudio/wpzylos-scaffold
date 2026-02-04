@@ -1,0 +1,19 @@
+name: Packagist Update
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  packagist:
+    name: Update Packagist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Packagist
+        run: |
+          curl -X POST https://packagist.org/api/update-package \
+            -H "Content-Type: application/json" \
+            -d '{"repository":{"url":"https://packagist.org/packages/wpdiggerstudio/wpzylos-scaffold"},"apiToken":"${{ secrets.PACKAGIST_TOKEN }}"}'
