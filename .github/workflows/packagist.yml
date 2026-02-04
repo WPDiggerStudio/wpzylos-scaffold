@@ -22,10 +22,8 @@ jobs:
 
       - name: Notify Packagist
         run: |
-          curl -sS -X POST "https://packagist.org/api/update-package" \
+          curl --fail-with-body -sS -X POST "https://packagist.org/api/update-package" \
             -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" \
             -H "User-Agent: github-actions (mailto:diggerwp@gmail.com)" \
-            -d '{"username":"'"$PACKAGIST_USERNAME"'","apiToken":"'"$PACKAGIST_TOKEN"'","repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
-        env:
-          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
-          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+            -d '{"repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
