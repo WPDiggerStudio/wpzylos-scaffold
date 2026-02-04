@@ -165,7 +165,7 @@ if (Test-Path ".plugin-config.json") {
 # ============================================================================
 
 if (-not $NonInteractive) {
-    Write-Host "Enter your plugin display name (e.g., 'WP BRA Calculator'):" -ForegroundColor White
+    Write-Host "Enter your plugin display name (e.g., 'My Awesome Plugin'):" -ForegroundColor White
     $PluginName = Read-Host ">"
     
     if ([string]::IsNullOrWhiteSpace($PluginName)) {

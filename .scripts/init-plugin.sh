@@ -171,7 +171,7 @@ fi
 # Collect Information
 # ============================================================================
 
-echo "Enter your plugin display name (e.g., 'WP BRA Calculator'):"
+echo "Enter your plugin display name (e.g., 'My Awesome Plugin'):"
 read -p "> " PLUGIN_NAME
 
 if [[ -z "$PLUGIN_NAME" ]]; then

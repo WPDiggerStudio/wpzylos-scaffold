@@ -81,7 +81,7 @@ chmod +x scaffold
 
 The script will:
 
-1. Prompt for your plugin name (e.g., "WP BRA Calculator")
+1. Prompt for your plugin name (e.g., "My Awesome Plugin")
 2. Auto-derive slug, namespace, prefixes, and vendor name
 3. Update `composer.json` package name
 4. Perform all search-and-replace operations
