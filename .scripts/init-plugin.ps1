@@ -171,6 +171,7 @@ try {
             CurrentAuthorName   = ""
             CurrentAuthorUri    = ""
             CurrentVendor       = ""
+            CurrentVersion      = ""
             MainPluginFile      = ""
         }
     
@@ -187,6 +188,7 @@ try {
                 $state.CurrentAuthorName = $config.author.name
                 $state.CurrentAuthorUri = $config.author.uri
                 $state.CurrentVendor = $config.composer.vendor
+                $state.CurrentVersion = $config.plugin.version
                 $state.MainPluginFile = $config.plugin.mainFile
             }
             catch {
@@ -246,6 +248,7 @@ try {
         Write-Host "  Slug:         $($state.CurrentSlug)" -ForegroundColor Gray
         Write-Host "  Namespace:    $($state.CurrentNamespace)" -ForegroundColor Gray
         Write-Host "  DB Prefix:    $($state.CurrentDbPrefix)" -ForegroundColor Gray
+        Write-Host "  Version:      $($state.CurrentVersion)" -ForegroundColor Gray
         Write-Host "  Vendor:       $($state.CurrentVendor)" -ForegroundColor Gray
         Write-Host ""
         Write-Host "You can update any value or press Enter to keep current." -ForegroundColor Yellow
@@ -274,6 +277,7 @@ try {
         $defaultNamespace = "MyPlugin"
         $defaultScoperPrefix = "my_plugin"
         $defaultDbPrefix = "myplugin_"
+        $defaultVersion = "1.0.0"
         $defaultAuthorName = "Your Name"
         $defaultAuthorUri = "https://example.com"
         $defaultVendor = "yourname"
@@ -284,6 +288,7 @@ try {
         $defaultNamespace = if ($state.CurrentNamespace) { $state.CurrentNamespace } else { "MyPlugin" }
         $defaultScoperPrefix = if ($state.CurrentScoperPrefix) { $state.CurrentScoperPrefix } else { "my_plugin" }
         $defaultDbPrefix = if ($state.CurrentDbPrefix) { $state.CurrentDbPrefix } else { "myplugin_" }
+        $defaultVersion = if ($state.CurrentVersion) { $state.CurrentVersion } else { "1.0.0" }
         $defaultAuthorName = if ($state.CurrentAuthorName) { $state.CurrentAuthorName } else { "Your Name" }
         $defaultAuthorUri = if ($state.CurrentAuthorUri) { $state.CurrentAuthorUri } else { "https://example.com" }
         $defaultVendor = if ($state.CurrentVendor) { $state.CurrentVendor } else { "yourname" }
@@ -337,6 +342,9 @@ try {
         }
         $VendorName = (Read-WithDefault "  Vendor Name (for composer)" $newDefaultVendor).ToLower() -replace '[^a-z0-9]', ''
     
+        # Version
+        $Version = Read-WithDefault "  Version" $defaultVersion
+    
         Write-Host ""
         Write-Host "Summary:" -ForegroundColor White
         Write-Host "  Plugin Name:    $PluginName" -ForegroundColor Gray
@@ -344,6 +352,7 @@ try {
         Write-Host "  Namespace:      $Namespace" -ForegroundColor Gray
         Write-Host "  Scoper Prefix:  $ScoperPrefix" -ForegroundColor Gray
         Write-Host "  DB Prefix:      $DbPrefix" -ForegroundColor Gray
+        Write-Host "  Version:        $Version" -ForegroundColor Gray
         Write-Host "  Vendor:         $VendorName" -ForegroundColor Gray
         Write-Host "  Composer Name:  $VendorName/$PluginSlug" -ForegroundColor Gray
         Write-Host ""
@@ -484,6 +493,18 @@ try {
     Replace-InFile -FilePath $mainPluginFile -Find "https://example.com/$oldSlug" -Replace $PluginUri
     Replace-InFile -FilePath $mainPluginFile -Find "https://example.com" -Replace $AuthorUri
     Replace-InFile -FilePath "readme.txt" -Find "your-username" -Replace (ConvertTo-VendorName $AuthorName)
+    Write-Done
+
+    # Step 8b: Update version in files
+    Write-Step 8 $totalSteps "Updating version"
+    if ($Version -and $Version -ne "1.0.0") {
+        Replace-InFile -FilePath $mainPluginFile -Find "Version:           1.0.0" -Replace "Version:           $Version"
+        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: 1.0.0" -Replace "Stable tag: $Version"
+    }
+    elseif ($state.CurrentVersion -and $Version -ne $state.CurrentVersion) {
+        Replace-InFile -FilePath $mainPluginFile -Find "Version:           $($state.CurrentVersion)" -Replace "Version:           $Version"
+        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: $($state.CurrentVersion)" -Replace "Stable tag: $Version"
+    }
     Write-Done
 
     # Step 9: Rename main plugin file

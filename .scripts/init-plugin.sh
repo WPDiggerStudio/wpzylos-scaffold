@@ -204,6 +204,7 @@ detect_state() {
     CURRENT_NAMESPACE=""
     CURRENT_SCOPER_PREFIX=""
     CURRENT_DB_PREFIX=""
+    CURRENT_VERSION=""
     CURRENT_AUTHOR_NAME=""
     CURRENT_AUTHOR_URI=""
     CURRENT_VENDOR=""
@@ -219,6 +220,7 @@ detect_state() {
         CURRENT_NAMESPACE=$(normalize_namespace "$raw_ns")
         CURRENT_SCOPER_PREFIX=$(grep -o '"scoperPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_DB_PREFIX=$(grep -o '"dbPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_VERSION=$(grep -o '"version": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_AUTHOR_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | tail -1 | cut -d'"' -f4)
         CURRENT_AUTHOR_URI=$(grep -o '"uri": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
         CURRENT_VENDOR=$(grep -o '"vendor": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
@@ -290,6 +292,7 @@ if [[ "$IS_FRESH" == "true" ]]; then
     DEFAULT_NAMESPACE="MyPlugin"
     DEFAULT_SCOPER_PREFIX="my_plugin"
     DEFAULT_DB_PREFIX="myplugin_"
+    DEFAULT_VERSION="1.0.0"
     DEFAULT_AUTHOR_NAME="Your Name"
     DEFAULT_AUTHOR_URI="https://example.com"
     DEFAULT_VENDOR="yourname"
@@ -299,6 +302,7 @@ else
     DEFAULT_NAMESPACE="${CURRENT_NAMESPACE:-MyPlugin}"
     DEFAULT_SCOPER_PREFIX="${CURRENT_SCOPER_PREFIX:-my_plugin}"
     DEFAULT_DB_PREFIX="${CURRENT_DB_PREFIX:-myplugin_}"
+    DEFAULT_VERSION="${CURRENT_VERSION:-1.0.0}"
     DEFAULT_AUTHOR_NAME="${CURRENT_AUTHOR_NAME:-Your Name}"
     DEFAULT_AUTHOR_URI="${CURRENT_AUTHOR_URI:-https://example.com}"
     DEFAULT_VENDOR="${CURRENT_VENDOR:-yourname}"
@@ -350,7 +354,8 @@ else
 fi
 VENDOR_NAME=$(read_with_default "  Vendor Name (for composer)" "$NEW_DEFAULT_VENDOR" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
 
-VERSION="${CURRENT_VERSION:-1.0.0}"
+# Version
+VERSION=$(read_with_default "  Version" "$DEFAULT_VERSION")
 
 # Determine what needs to change
 OLD_NAME="${CURRENT_NAME:-My Plugin}"
@@ -377,6 +382,7 @@ echo -e "  ${GRAY}Plugin Slug:${NC}    $PLUGIN_SLUG"
 echo -e "  ${GRAY}Namespace:${NC}      $NAMESPACE"
 echo -e "  ${GRAY}Scoper Prefix:${NC}  $SCOPER_PREFIX"
 echo -e "  ${GRAY}DB Prefix:${NC}      $DB_PREFIX"
+echo -e "  ${GRAY}Version:${NC}        $VERSION"
 echo -e "  ${GRAY}Vendor:${NC}         $VENDOR_NAME"
 echo -e "  ${GRAY}Composer Name:${NC}  $VENDOR_NAME/$PLUGIN_SLUG"
 echo ""
@@ -500,6 +506,17 @@ replace_in_file "$MAIN_PLUGIN_FILE" "https://example.com/$OLD_SLUG" "$PLUGIN_URI
 replace_in_file "$MAIN_PLUGIN_FILE" "https://example.com" "$AUTHOR_URI"
 AUTHOR_USERNAME=$(to_vendor "$AUTHOR_NAME")
 replace_in_file "readme.txt" "your-username" "$AUTHOR_USERNAME"
+print_done
+
+# Step 8b: Update version in files
+print_step 8 $TOTAL_STEPS "Updating version"
+if [[ "$VERSION" && "$VERSION" != "1.0.0" ]]; then
+    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           1.0.0" "Version:           $VERSION"
+    replace_in_file "readme.txt" "Stable tag: 1.0.0" "Stable tag: $VERSION"
+elif [[ "$CURRENT_VERSION" && "$VERSION" != "$CURRENT_VERSION" ]]; then
+    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           $CURRENT_VERSION" "Version:           $VERSION"
+    replace_in_file "readme.txt" "Stable tag: $CURRENT_VERSION" "Stable tag: $VERSION"
+fi
 print_done
 
 # Step 9: Rename main plugin file
