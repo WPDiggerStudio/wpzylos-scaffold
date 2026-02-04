@@ -166,7 +166,7 @@ function Run-PHPStan {
     }
     
     if (Test-Path $phpstanPath) {
-        $result = & $phpstanPath analyze app includes --no-progress 2>&1
+        $result = & $phpstanPath analyze app --no-progress 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Success "Static analysis passed"
         }
@@ -215,7 +215,7 @@ else {
 
 # Step 3: Install production dependencies
 Write-Step "Installing production dependencies..."
-$composerResult = & composer install --no-dev --optimize-autoloader 2>&1
+$composerResult = & composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader --classmap-authoritative 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Composer install failed"
     Write-Host $composerResult -ForegroundColor Gray
@@ -372,6 +372,11 @@ Copy-Item -Path "$BUILD_DIR\*" -Destination $tempPluginDir -Recurse -Force
 )
 
 Remove-Item -Path $tempDir -Recurse -Force
+
+# Clean up build directory (keep only dist with ZIP)
+if (Test-Path $BUILD_DIR) {
+    Remove-Item -Path $BUILD_DIR -Recurse -Force
+}
 
 $zipSize = [math]::Round((Get-Item $zipPath).Length / 1KB, 2)
 Write-Success "Created: $zipPath ($zipSize KB)"

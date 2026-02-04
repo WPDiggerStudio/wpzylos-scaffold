@@ -199,7 +199,7 @@ fi
 
 # Step 3: Install production dependencies
 print_step "Installing production dependencies..."
-if ! composer install --no-dev --optimize-autoloader 2>&1; then
+if ! composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader --classmap-authoritative 2>&1; then
     print_error "Composer install failed"
     exit 1
 fi
@@ -330,6 +330,9 @@ fi
 cd "$ORIG_DIR" 2>/dev/null
 
 rm -rf "$TEMP_DIR"
+
+# Clean up build directory (keep only dist with ZIP)
+rm -rf "$BUILD_DIR"
 
 ZIP_SIZE=$(du -h "$ZIP_PATH" | cut -f1)
 print_success "Created: $ZIP_PATH ($ZIP_SIZE)"
