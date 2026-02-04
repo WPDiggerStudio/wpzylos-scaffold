@@ -39,6 +39,7 @@ return [
                 'tests',
                 'Tests',
                 'vendor-bin',
+                'humbug',  // Exclude PHP-Scoper itself
             ])
             ->in('vendor'),
     ],
