@@ -105,6 +105,13 @@ normalize_namespace() {
     printf '%s' "$ns" | sed -e 's/\\\\\\\\/\\/g' -e 's/\\\\/\\/g'
 }
 
+# Convert namespace to JSON format (double backslashes for JSON escaping)
+# KYNetCode\BraCalculator -> KYNetCode\\BraCalculator
+namespace_for_json() {
+    local ns="$1"
+    printf '%s' "$ns" | sed 's/\\/\\\\/g'
+}
+
 # Escape string for use in sed replacement
 # Escapes: backslash, ampersand, and the delimiter (|)
 escape_for_sed() {
@@ -401,7 +408,40 @@ fi
 # Step 3: Replace namespace
 print_step 3 $TOTAL_STEPS "Replacing namespace"
 if [[ "$NAMESPACE" != "$OLD_NAMESPACE" ]]; then
-    replace_in_all_files "$OLD_NAMESPACE" "$NAMESPACE"
+    # For PHP, TXT, MD files - use single backslash namespace
+    find . -type f \( -name "*.php" -o -name "*.txt" -o -name "*.md" \) \
+        -not -path "./vendor/*" -not -path "./.git/*" -not -path "./.scripts/*" | while read -r file; do
+        if grep -qF "$OLD_NAMESPACE" "$file" 2>/dev/null; then
+            local escaped_old
+            local escaped_new
+            escaped_old=$(escape_for_sed "$OLD_NAMESPACE")
+            escaped_new=$(escape_for_sed "$NAMESPACE")
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                sed -i '' "s|${escaped_old}|${escaped_new}|g" "$file"
+            else
+                sed -i "s|${escaped_old}|${escaped_new}|g" "$file"
+            fi
+        fi
+    done
+    # For JSON files - use double backslash namespace (JSON escaping)
+    local old_json_ns
+    local new_json_ns
+    old_json_ns=$(namespace_for_json "$OLD_NAMESPACE")
+    new_json_ns=$(namespace_for_json "$NAMESPACE")
+    find . -type f -name "*.json" \
+        -not -path "./vendor/*" -not -path "./.git/*" | while read -r file; do
+        if grep -qF "$old_json_ns" "$file" 2>/dev/null; then
+            local escaped_old
+            local escaped_new
+            escaped_old=$(escape_for_sed "$old_json_ns")
+            escaped_new=$(escape_for_sed "$new_json_ns")
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                sed -i '' "s|${escaped_old}|${escaped_new}|g" "$file"
+            else
+                sed -i "s|${escaped_old}|${escaped_new}|g" "$file"
+            fi
+        fi
+    done
     print_done
 else
     print_skip
