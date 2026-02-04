@@ -85,11 +85,14 @@ to_vendor() {
 }
 
 # Read with default value, showing current if exists
+# Uses -r to preserve backslashes, -e for readline support
 read_with_default() {
     local prompt="$1"
     local default="$2"
     local input
-    read -p "$prompt [$default]: " input
+    # -r: don't interpret backslashes
+    # -e: use readline for editing (handles arrow keys properly)
+    read -r -e -p "$prompt [$default]: " input
     echo "${input:-$default}"
 }
 
@@ -325,7 +328,7 @@ echo -e "  ${GRAY}Vendor:${NC}         $VENDOR_NAME"
 echo -e "  ${GRAY}Composer Name:${NC}  $VENDOR_NAME/$PLUGIN_SLUG"
 echo ""
 
-read -p "Proceed with initialization? [Y/n]: " CONFIRM
+read -r -p "Proceed with initialization? [Y/n]: " CONFIRM
 if [[ "$CONFIRM" == "n" || "$CONFIRM" == "N" ]]; then
     echo -e "${YELLOW}Cancelled.${NC}"
     exit 0
