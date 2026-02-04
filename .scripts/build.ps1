@@ -118,6 +118,164 @@ function Write-Error {
     Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
+# ============================================================================
+# Intelligent Build Config Functions
+# ============================================================================
+
+# Known items that should always be excluded from build
+$ALWAYS_EXCLUDE = @(
+    ".git", ".github", ".scripts", ".gitignore", ".gitattributes",
+    "vendor", "tests", "docs", "node_modules",
+    "composer.lock", "phpstan.neon", "phpstan.neon.dist", "phpunit.xml",
+    "scoper.inc.php", "scaffold.ps1", "scaffold.sh",
+    "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md",
+    ".plugin-config.json", "build", "dist"
+)
+
+# Base structure directories that should be auto-included
+$BASE_STRUCTURE_DIRS = @("app", "bootstrap", "config", "database", "resources", "routes")
+
+# Essential files that should be auto-included
+$ESSENTIAL_FILES = @("uninstall.php", "readme.txt", "LICENSE", "composer.json")
+
+function Get-BuildConfig {
+    if (Test-Path $CONFIG_FILE) {
+        $cfg = Get-Content $CONFIG_FILE -Raw | ConvertFrom-Json
+        if ($cfg.build) {
+            return $cfg.build
+        }
+    }
+    return $null
+}
+
+function Save-BuildConfig {
+    param($BuildConfig)
+    
+    $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    
+    if (Test-Path $CONFIG_FILE) {
+        $fullPath = (Resolve-Path $CONFIG_FILE).Path
+        $cfg = Get-Content $CONFIG_FILE -Raw | ConvertFrom-Json
+        
+        # Convert to hashtable for modification
+        $cfgHash = @{}
+        $cfg.PSObject.Properties | ForEach-Object { $cfgHash[$_.Name] = $_.Value }
+        $cfgHash.build = $BuildConfig
+        
+        $json = $cfgHash | ConvertTo-Json -Depth 5
+        [System.IO.File]::WriteAllText($fullPath, $json, $Utf8NoBom)
+    }
+}
+
+function Get-IncludedItems {
+    # Load saved build config or create new
+    $buildConfig = Get-BuildConfig
+    $needsSave = $false
+    
+    if (-not $buildConfig) {
+        $buildConfig = @{
+            includeDirs   = @()
+            includeFiles  = @()
+            promptedItems = @()
+        }
+        $needsSave = $true
+    }
+    
+    # Ensure arrays exist
+    if (-not $buildConfig.includeDirs) { $buildConfig.includeDirs = @() }
+    if (-not $buildConfig.includeFiles) { $buildConfig.includeFiles = @() }
+    if (-not $buildConfig.promptedItems) { $buildConfig.promptedItems = @() }
+    
+    # Scan root directory for files and folders
+    $rootItems = Get-ChildItem -Path "." -Force | Where-Object { 
+        $_.Name -notin $ALWAYS_EXCLUDE -and 
+        $_.Name -ne $MAIN_FILE
+    }
+    
+    $includeDirs = [System.Collections.ArrayList]@($buildConfig.includeDirs)
+    $includeFiles = [System.Collections.ArrayList]@($buildConfig.includeFiles)
+    $promptedItems = [System.Collections.ArrayList]@($buildConfig.promptedItems)
+    
+    # Process directories
+    foreach ($item in ($rootItems | Where-Object { $_.PSIsContainer })) {
+        $name = $item.Name
+        
+        # Auto-include base structure
+        if ($name -in $BASE_STRUCTURE_DIRS) {
+            if ($name -notin $includeDirs) {
+                [void]$includeDirs.Add($name)
+                $needsSave = $true
+            }
+        }
+        # Prompt for unknown directories
+        elseif ($name -notin $promptedItems) {
+            Write-Host ""
+            Write-Host "  Unknown directory found: " -NoNewline -ForegroundColor White
+            Write-Host "$name/" -ForegroundColor Cyan
+            $answer = Read-Host "  Include in build? [Y/n]"
+            
+            [void]$promptedItems.Add($name)
+            if ($answer -ne 'n' -and $answer -ne 'N') {
+                [void]$includeDirs.Add($name)
+            }
+            $needsSave = $true
+        }
+    }
+    
+    # Process PHP files at root (excluding known ones)
+    $knownRootFiles = @($MAIN_FILE, "uninstall.php", "scoper.inc.php", "index.php")
+    foreach ($item in ($rootItems | Where-Object { -not $_.PSIsContainer -and $_.Extension -eq ".php" })) {
+        $name = $item.Name
+        
+        if ($name -in $knownRootFiles) { continue }
+        
+        # Prompt for unknown PHP files
+        if ($name -notin $promptedItems) {
+            Write-Host ""
+            Write-Host "  Unknown PHP file found: " -NoNewline -ForegroundColor White
+            Write-Host "$name" -ForegroundColor Cyan
+            $answer = Read-Host "  Include in build? [Y/n]"
+            
+            [void]$promptedItems.Add($name)
+            if ($answer -ne 'n' -and $answer -ne 'N') {
+                [void]$includeFiles.Add($name)
+            }
+            $needsSave = $true
+        }
+    }
+    
+    # Add essential files
+    foreach ($file in $ESSENTIAL_FILES) {
+        if ((Test-Path $file) -and $file -notin $includeFiles) {
+            [void]$includeFiles.Add($file)
+            $needsSave = $true
+        }
+    }
+    
+    # Always include main plugin file
+    if ($MAIN_FILE -notin $includeFiles) {
+        [void]$includeFiles.Add($MAIN_FILE)
+        $needsSave = $true
+    }
+    
+    # Save config if changed
+    if ($needsSave) {
+        $buildConfig = @{
+            includeDirs   = @($includeDirs | Sort-Object -Unique)
+            includeFiles  = @($includeFiles | Sort-Object -Unique)
+            promptedItems = @($promptedItems | Sort-Object -Unique)
+        }
+        Save-BuildConfig -BuildConfig $buildConfig
+        Write-Host ""
+        Write-Host "  Build preferences saved to .plugin-config.json" -ForegroundColor Gray
+    }
+    
+    return @{
+        Dirs  = @($includeDirs | Sort-Object -Unique)
+        Files = @($includeFiles | Sort-Object -Unique)
+    }
+}
+
 function Clean-Build {
     Write-Step "Cleaning build artifacts..."
     
@@ -141,7 +299,7 @@ function Run-PHPCBF {
     
     if (Test-Path $phpcbfPath) {
         # Run phpcbf - exit code 1 means files were fixed (not an error)
-        $result = & $phpcbfPath --standard=PSR12 app includes 2>&1
+        $result = & $phpcbfPath --standard=PSR12 app 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Success "No code style issues found"
         }
@@ -269,32 +427,29 @@ else {
     Write-Success "Files copied to build directory"
 }
 
-# Step 5: Copy essential files to build
-Write-Step "Copying essential files..."
+# Step 5: Copy essential files to build (using intelligent detection)
+Write-Step "Detecting and copying build files..."
 
-$essentialFiles = @(
-    $MAIN_FILE,
-    "uninstall.php",
-    "readme.txt",
-    "LICENSE",
-    "composer.json"
-)
+$buildItems = Get-IncludedItems
 
-foreach ($file in $essentialFiles) {
+Write-Host "  Directories: $($buildItems.Dirs -join ', ')" -ForegroundColor Gray
+Write-Host "  Files: $($buildItems.Files -join ', ')" -ForegroundColor Gray
+
+# Copy included files
+foreach ($file in $buildItems.Files) {
     if (Test-Path $file) {
         Copy-Item -Path $file -Destination "$BUILD_DIR\" -Force
     }
 }
 
-# Copy directories that might not be scoped
-$essentialDirs = @("resources", "config", "routes", "database")
-foreach ($dir in $essentialDirs) {
+# Copy included directories (that aren't already scoped/copied)
+foreach ($dir in $buildItems.Dirs) {
     if ((Test-Path $dir) -and -not (Test-Path "$BUILD_DIR\$dir")) {
         Copy-Item -Path $dir -Destination "$BUILD_DIR\$dir" -Recurse -Force
     }
 }
 
-Write-Success "Essential files copied"
+Write-Success "Build files copied"
 
 # Step 6: Install production dependencies in build directory
 Write-Step "Installing production dependencies in build directory..."
