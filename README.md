@@ -117,6 +117,10 @@ your-plugin/
 ├── app/                        # Application code (PSR-4: YourPlugin\)
 │   ├── Core/
 │   │   └── PluginContext.php   # Plugin identity (slug, prefix, text domain)
+│   ├── Lifecycle/
+│   │   ├── Activator.php       # Activation logic
+│   │   ├── Deactivator.php     # Deactivation logic
+│   │   └── Uninstaller.php     # Uninstall cleanup
 │   └── Support/
 │       └── helpers.php         # Global helper functions
 ├── bootstrap/
@@ -125,10 +129,6 @@ your-plugin/
 │   └── app.php                 # Application configuration
 ├── database/
 │   └── migrations/             # Database migrations
-├── includes/
-│   ├── Activator.php           # Activation logic
-│   ├── Deactivator.php         # Deactivation logic
-│   └── Uninstaller.php         # Uninstall cleanup
 ├── resources/
 │   ├── lang/                   # Translation files
 │   └── views/                  # PHP view templates
