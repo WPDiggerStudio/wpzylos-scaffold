@@ -498,11 +498,13 @@ try {
     # Step 8b: Update version in files
     Write-Step 8 $totalSteps "Updating version"
     $oldVersion = if ($state.CurrentVersion) { $state.CurrentVersion } else { "1.0.0" }
+    # Get the actual main plugin file from config (after possible rename)
+    $actualMainFile = if ($PluginSlug -ne $oldSlug -and (Test-Path "$PluginSlug.php")) { "$PluginSlug.php" } else { $mainPluginFile }
     if ($Version -ne $oldVersion) {
-        # Update plugin header Version
-        Replace-InFile -FilePath $mainPluginFile -Find "Version:           $oldVersion" -Replace "Version:           $Version"
-        # Update PluginContext version
-        Replace-InFile -FilePath $mainPluginFile -Find "'version' => '$oldVersion'" -Replace "'version' => '$Version'"
+        # Update plugin header Version (format: "* Version: X.X.X")
+        Replace-InFile -FilePath $actualMainFile -Find "Version: $oldVersion" -Replace "Version: $Version"
+        # Update PluginContext version (format: "'version' => 'X.X.X'")
+        Replace-InFile -FilePath $actualMainFile -Find "'version' => '$oldVersion'" -Replace "'version' => '$Version'"
         # Update readme.txt Stable tag
         Replace-InFile -FilePath "readme.txt" -Find "Stable tag: $oldVersion" -Replace "Stable tag: $Version"
         Write-Done

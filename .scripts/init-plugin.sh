@@ -511,11 +511,17 @@ print_done
 # Step 8b: Update version in files
 print_step 8 $TOTAL_STEPS "Updating version"
 OLD_VERSION="${CURRENT_VERSION:-1.0.0}"
+# Get the actual main plugin file (after possible rename)
+if [[ "$PLUGIN_SLUG" != "$OLD_SLUG" && -f "$PLUGIN_SLUG.php" ]]; then
+    ACTUAL_MAIN_FILE="$PLUGIN_SLUG.php"
+else
+    ACTUAL_MAIN_FILE="$MAIN_PLUGIN_FILE"
+fi
 if [[ "$VERSION" != "$OLD_VERSION" ]]; then
-    # Update plugin header Version
-    replace_in_file "$MAIN_PLUGIN_FILE" "Version:           $OLD_VERSION" "Version:           $VERSION"
-    # Update PluginContext version
-    replace_in_file "$MAIN_PLUGIN_FILE" "'version' => '$OLD_VERSION'" "'version' => '$VERSION'"
+    # Update plugin header Version (format: "* Version: X.X.X")
+    replace_in_file "$ACTUAL_MAIN_FILE" "Version: $OLD_VERSION" "Version: $VERSION"
+    # Update PluginContext version (format: "'version' => 'X.X.X'")
+    replace_in_file "$ACTUAL_MAIN_FILE" "'version' => '$OLD_VERSION'" "'version' => '$VERSION'"
     # Update readme.txt Stable tag
     replace_in_file "readme.txt" "Stable tag: $OLD_VERSION" "Stable tag: $VERSION"
     print_done
