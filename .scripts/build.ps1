@@ -276,8 +276,7 @@ $essentialFiles = @(
     $MAIN_FILE,
     "uninstall.php",
     "readme.txt",
-    "LICENSE",
-    "composer.json"
+    "LICENSE"
 )
 
 foreach ($file in $essentialFiles) {
@@ -331,7 +330,8 @@ $devFiles = @(
     "$BUILD_DIR\CONTRIBUTING.md",
     "$BUILD_DIR\SECURITY.md",
     "$BUILD_DIR\CHANGELOG.md",
-    "$BUILD_DIR\composer.lock"
+    "$BUILD_DIR\composer.lock",
+    "$BUILD_DIR\composer.json"
 )
 
 foreach ($file in $devFiles) {

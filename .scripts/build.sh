@@ -238,7 +238,7 @@ fi
 # Step 5: Copy essential files
 print_step "Copying essential files..."
 
-for file in "$MAIN_FILE" uninstall.php readme.txt LICENSE composer.json; do
+for file in "$MAIN_FILE" uninstall.php readme.txt LICENSE; do
     if [[ -f "$file" ]]; then
         cp "$file" "$BUILD_DIR/"
     fi
@@ -285,6 +285,7 @@ rm -rf \
     "$BUILD_DIR/SECURITY.md" \
     "$BUILD_DIR/CHANGELOG.md" \
     "$BUILD_DIR/composer.lock" \
+    "$BUILD_DIR/composer.json" \
     2>/dev/null || true
 
 print_success "Development files removed"
@@ -301,9 +302,24 @@ TEMP_DIR="$DIST_DIR/temp"
 mkdir -p "$TEMP_DIR/$PLUGIN_SLUG"
 cp -r "$BUILD_DIR"/* "$TEMP_DIR/$PLUGIN_SLUG/"
 
-# Create ZIP
+# Create ZIP - check for available zip tools
 cd "$TEMP_DIR"
-zip -r "../$PLUGIN_SLUG-$VERSION.zip" "$PLUGIN_SLUG" -q
+
+# Try native zip first, then 7z, then PowerShell as fallback
+if command -v zip &> /dev/null; then
+    zip -r "../$PLUGIN_SLUG-$VERSION.zip" "$PLUGIN_SLUG" -q
+elif command -v 7z &> /dev/null; then
+    7z a -tzip "../$PLUGIN_SLUG-$VERSION.zip" "$PLUGIN_SLUG" -bso0 -bsp0
+else
+    # PowerShell fallback for Windows Git Bash
+    if command -v powershell.exe &> /dev/null; then
+        powershell.exe -Command "Compress-Archive -Path '$PLUGIN_SLUG' -DestinationPath '../$PLUGIN_SLUG-$VERSION.zip' -Force"
+    else
+        print_error "No zip tool found. Install zip, 7z, or run from PowerShell."
+        exit 1
+    fi
+fi
+
 cd - > /dev/null
 
 rm -rf "$TEMP_DIR"
