@@ -5,9 +5,9 @@
 # Single command to manage your WPZylos plugin scaffold.
 #
 # Usage:
-#   ./scaffold           # Interactive menu
-#   ./scaffold init      # Initialize plugin
-#   ./scaffold build     # Build for production
+#   ./scaffold.sh           # Interactive menu
+#   ./scaffold.sh init      # Initialize plugin
+#   ./scaffold.sh build     # Build for production
 # ============================================================================
 
 set -e

@@ -7,7 +7,7 @@
 # the build script to use.
 #
 # Location: .scripts/init-plugin.sh
-# Called by: ../wpzylos
+# Called by: ../scaffold.sh
 # ============================================================================
 
 set -e
@@ -86,16 +86,18 @@ read_with_default() {
     echo "${input:-$default}"
 }
 
-# Replace in file
+# Replace in file (handles backslashes properly)
 replace_in_file() {
     local file="$1"
     local find="$2"
     local replace="$3"
     if [[ -f "$file" ]]; then
+        # Escape backslashes in replace string for sed
+        local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|${find}|${replace}|g" "$file"
+            sed -i '' "s|${find}|${escaped_replace}|g" "$file"
         else
-            sed -i "s|${find}|${replace}|g" "$file"
+            sed -i "s|${find}|${escaped_replace}|g" "$file"
         fi
     fi
 }
@@ -104,13 +106,15 @@ replace_in_file() {
 replace_in_all_files() {
     local find="$1"
     local replace="$2"
+    # Escape backslashes in replace string for sed
+    local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
     find . -type f \( -name "*.php" -o -name "*.json" -o -name "*.txt" -o -name "*.md" \) \
         -not -path "./vendor/*" -not -path "./.git/*" | while read -r file; do
-        if grep -q "$find" "$file" 2>/dev/null; then
+        if grep -qF "$find" "$file" 2>/dev/null; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s|${find}|${replace}|g" "$file"
+                sed -i '' "s|${find}|${escaped_replace}|g" "$file"
             else
-                sed -i "s|${find}|${replace}|g" "$file"
+                sed -i "s|${find}|${escaped_replace}|g" "$file"
             fi
         fi
     done
@@ -326,5 +330,5 @@ echo ""
 echo "Next steps:"
 echo -e "${GRAY}  1. Run: composer install${NC}"
 echo -e "${GRAY}  2. Develop your plugin${NC}"
-echo -e "${GRAY}  3. Build: ./build.sh${NC}"
+echo -e "${GRAY}  3. Build: ./scaffold.sh build${NC}"
 echo ""

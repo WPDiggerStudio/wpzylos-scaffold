@@ -74,9 +74,9 @@ After creating your project, run the **scaffold CLI** to customize and manage yo
 
 ```bash
 chmod +x scaffold
-./scaffold               # Interactive menu
-./scaffold init          # Initialize plugin directly
-./scaffold build         # Build for production directly
+./scaffold.sh               # Interactive menu
+./scaffold.sh init          # Initialize plugin directly
+./scaffold.sh build         # Build for production directly
 ```
 
 The script will:
@@ -138,7 +138,7 @@ Run the Scaffold CLI for automated setup:
 
 ```powershell
 .\scaffold.ps1 init      # Windows
-./scaffold init          # Linux/Mac
+./scaffold.sh init          # Linux/Mac
 ```
 
 ### Manual
@@ -303,9 +303,9 @@ Use the Scaffold CLI for production builds:
 **Linux/Mac:**
 
 ```bash
-./scaffold build              # Full build (QA + Scoper + ZIP)
-./scaffold build --skip-qa    # Skip code style/analysis checks
-./scaffold build --skip-scoper  # Dev build (skip PHP-Scoper)
+./scaffold.sh build              # Full build (QA + Scoper + ZIP)
+./scaffold.sh build --skip-qa    # Skip code style/analysis checks
+./scaffold.sh build --skip-scoper  # Dev build (skip PHP-Scoper)
 ```
 
 The build script will:
