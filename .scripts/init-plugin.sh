@@ -415,36 +415,30 @@ fi
 print_step 3 $TOTAL_STEPS "Replacing namespace"
 if [[ "$NAMESPACE" != "$OLD_NAMESPACE" ]]; then
     # For PHP, TXT, MD files - use single backslash namespace
+    escaped_old_ns=$(escape_for_sed "$OLD_NAMESPACE")
+    escaped_new_ns=$(escape_for_sed "$NAMESPACE")
     find . -type f \( -name "*.php" -o -name "*.txt" -o -name "*.md" \) \
         -not -path "./vendor/*" -not -path "./.git/*" -not -path "./.scripts/*" | while read -r file; do
         if grep -qF "$OLD_NAMESPACE" "$file" 2>/dev/null; then
-            local escaped_old
-            local escaped_new
-            escaped_old=$(escape_for_sed "$OLD_NAMESPACE")
-            escaped_new=$(escape_for_sed "$NAMESPACE")
             if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s|${escaped_old}|${escaped_new}|g" "$file"
+                sed -i '' "s|${escaped_old_ns}|${escaped_new_ns}|g" "$file"
             else
-                sed -i "s|${escaped_old}|${escaped_new}|g" "$file"
+                sed -i "s|${escaped_old_ns}|${escaped_new_ns}|g" "$file"
             fi
         fi
     done
     # For JSON files - use double backslash namespace (JSON escaping)
-    local old_json_ns
-    local new_json_ns
     old_json_ns=$(namespace_for_json "$OLD_NAMESPACE")
     new_json_ns=$(namespace_for_json "$NAMESPACE")
+    escaped_old_json=$(escape_for_sed "$old_json_ns")
+    escaped_new_json=$(escape_for_sed "$new_json_ns")
     find . -type f -name "*.json" \
         -not -path "./vendor/*" -not -path "./.git/*" | while read -r file; do
         if grep -qF "$old_json_ns" "$file" 2>/dev/null; then
-            local escaped_old
-            local escaped_new
-            escaped_old=$(escape_for_sed "$old_json_ns")
-            escaped_new=$(escape_for_sed "$new_json_ns")
             if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s|${escaped_old}|${escaped_new}|g" "$file"
+                sed -i '' "s|${escaped_old_json}|${escaped_new_json}|g" "$file"
             else
-                sed -i "s|${escaped_old}|${escaped_new}|g" "$file"
+                sed -i "s|${escaped_old_json}|${escaped_new_json}|g" "$file"
             fi
         fi
     done
