@@ -12,10 +12,18 @@ jobs:
   packagist:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug secrets presence
+        run: |
+          echo "USERNAME length: ${#PACKAGIST_USERNAME}"
+          echo "TOKEN length: ${#PACKAGIST_TOKEN}"
+        env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+
       - name: Notify Packagist
         run: |
           curl -sS -X POST "https://packagist.org/api/update-package" \
             -H "Content-Type: application/json" \
             -H "User-Agent: github-actions (mailto:diggerwp@gmail.com)" \
-            -H "Authorization: Bearer WPDiggerStudio:${{ secrets.PACKAGIST_TOKEN }}" \
-            -d '{"repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
+            -d '{"username":"'"${PACKAGIST_USERNAME}"'","apiToken":"'"${PACKAGIST_TOKEN}"'","repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
+        env:
