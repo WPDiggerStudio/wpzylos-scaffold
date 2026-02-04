@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v1.1.2 - 2026-02-04
+
+### 🚀 What's New in v1.2.0
+
+#### ✨ Intelligent Init Script
+
+- **Smart state detection**: Handles fresh install, re-configuration, and deleted config scenarios
+- **Namespace normalization**: Accepts single, double, or triple backslashes - all work correctly
+- **Partial updates**: Only replaces changed values, shows "Skipped" for unchanged fields
+- **Proper backslash handling**: Fixed sed escape issues for namespaces like `KYNetCode\WPBraCalculator`
+
+#### 📖 Documentation Improvements
+
+- Added **Command Prompt** instructions for Windows users
+- Improved CLI documentation with clear Option 1/2/3 format
+- Added Git Bash alternative syntax: `bash scaffold.sh`
+- Link to Git for Windows download
+
+#### 🔧 Build Improvements
+
+- [phpstan.neon](cci:7://file:///d:/laragon/www/wpzylos/wpzylos-scaffold/phpstan.neon:0:0-0:0) now tracked directly (not .dist) for streamlined builds
+- PHPStan configuration includes WordPress stubs out of the box
+
+#### 🔄 CI/CD
+
+- Packagist auto-update workflow with dynamic repository URL
+- Fixed workflow triggers and authentication
+
+#### 🐛 Bug Fixes
+
+- Fixed `unterminated 's' command` error when namespace contains backslash
+- Fixed terminal escape codes corrupting namespace input
+- Fixed namespace not saving correctly to `.plugin-config.json`
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+**Full Changelog**: https://github.com/WPDiggerStudio/wpzylos-scaffold/compare/v1.1.0...v1.1.2
+
 ## v1.1.0 - 2026-02-04
 
 ### 🚀 WPZylos Scaffold v1.1.0
