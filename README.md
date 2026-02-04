@@ -60,9 +60,11 @@ composer install
 
 ### Initialize Your Plugin (Recommended)
 
-After creating your project, run the **Scaffold CLI** to customize and manage your plugin:
+After creating your project, run the **Scaffold CLI** to customize and manage your plugin.
 
-**Windows (PowerShell):**
+#### Option 1: PowerShell (Windows 10/11)
+
+Open **Windows PowerShell** (search "PowerShell" in Start menu):
 
 ```powershell
 .\scaffold.ps1           # Interactive menu
@@ -70,7 +72,9 @@ After creating your project, run the **Scaffold CLI** to customize and manage yo
 .\scaffold.ps1 build     # Build for production directly
 ```
 
-**Windows (Command Prompt):**
+#### Option 2: Command Prompt (Windows)
+
+Open **Command Prompt** (cmd.exe). Since `.ps1` files don't run directly in cmd, use:
 
 ```cmd
 powershell -ExecutionPolicy Bypass -File scaffold.ps1
@@ -78,14 +82,20 @@ powershell -ExecutionPolicy Bypass -File scaffold.ps1 init
 powershell -ExecutionPolicy Bypass -File scaffold.ps1 build
 ```
 
-**Linux/Mac (or Git Bash on Windows):**
+#### Option 3: Bash (Linux/Mac/Git Bash)
+
+For **Linux**, **macOS**, or **Git Bash on Windows** (install [Git for Windows](https://git-scm.com/download/win)):
 
 ```bash
-chmod +x scaffold.sh
+chmod +x scaffold.sh     # Make executable (first time only)
 ./scaffold.sh            # Interactive menu
 ./scaffold.sh init       # Initialize plugin directly
 ./scaffold.sh build      # Build for production directly
 ```
+
+> **Git Bash alternative:** If `./scaffold.sh` doesn't work, try `bash scaffold.sh`
+
+---
 
 The **intelligent init script** handles all scenarios:
 
