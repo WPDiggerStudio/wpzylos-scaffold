@@ -93,6 +93,75 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 # ============================================================================
+# Intelligent Version Suggestion
+# ============================================================================
+
+get_suggested_version() {
+    local plugin_slug="$1"
+    
+    # Check for existing ZIPs in dist/
+    if [[ -d "$DIST_DIR" ]]; then
+        local latest_zip=$(ls -1 "$DIST_DIR"/${plugin_slug}-*.zip 2>/dev/null | sort -V | tail -1)
+        
+        if [[ -n "$latest_zip" ]]; then
+            # Extract version from ZIP filename
+            local zip_name=$(basename "$latest_zip")
+            if [[ "$zip_name" =~ ${plugin_slug}-([0-9]+)\.([0-9]+)\.([0-9]+)\.zip ]]; then
+                local major="${BASH_REMATCH[1]}"
+                local minor="${BASH_REMATCH[2]}"
+                local patch="${BASH_REMATCH[3]}"
+                
+                # Suggest next patch version
+                echo "$major.$minor.$((patch + 1))"
+                return
+            fi
+        fi
+    fi
+    
+    # No existing ZIPs, suggest 1.0.0
+    echo "1.0.0"
+}
+
+# Only prompt if version wasn't passed via command line
+VERSION_FROM_ARG=false
+for arg in "$@"; do
+    if [[ "$arg" == "--version" ]]; then
+        VERSION_FROM_ARG=true
+        break
+    fi
+done
+
+if [[ "$VERSION_FROM_ARG" == false ]]; then
+    SUGGESTED_VERSION=$(get_suggested_version "$PLUGIN_SLUG")
+    
+    # Check if ZIP already exists for current version
+    CURRENT_ZIP_PATH="$DIST_DIR/$PLUGIN_SLUG-$VERSION.zip"
+    if [[ -f "$CURRENT_ZIP_PATH" ]]; then
+        echo ""
+        echo -e "  ${YELLOW}ZIP already exists for version $VERSION${NC}"
+        echo -e "  ${WHITE}Suggested next version: ${CYAN}$SUGGESTED_VERSION${NC}"
+        echo ""
+        read -r -p "  Version [$SUGGESTED_VERSION]: " USER_VERSION
+        if [[ -z "$USER_VERSION" ]]; then
+            VERSION="$SUGGESTED_VERSION"
+        else
+            VERSION="$USER_VERSION"
+        fi
+    elif [[ "$VERSION" == "1.0.0" && "$SUGGESTED_VERSION" != "1.0.0" ]]; then
+        # Config has 1.0.0 but we have existing builds
+        echo ""
+        echo -e "  ${WHITE}Existing builds found. Suggested version: ${CYAN}$SUGGESTED_VERSION${NC}"
+        echo ""
+        read -r -p "  Version [$SUGGESTED_VERSION]: " USER_VERSION
+        if [[ -z "$USER_VERSION" ]]; then
+            VERSION="$SUGGESTED_VERSION"
+        else
+            VERSION="$USER_VERSION"
+        fi
+    fi
+fi
+
+# ============================================================================
 # Helper Functions
 # ============================================================================
 

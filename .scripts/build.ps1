@@ -86,6 +86,72 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 }
 
 # ============================================================================
+# Intelligent Version Suggestion
+# ============================================================================
+
+function Get-SuggestedVersion {
+    param([string]$CurrentVersion, [string]$PluginSlug)
+    
+    # Check for existing ZIPs in dist/
+    if (Test-Path $DIST_DIR) {
+        $existingZips = Get-ChildItem -Path $DIST_DIR -Filter "$PluginSlug-*.zip" | 
+        Sort-Object Name -Descending
+        
+        if ($existingZips.Count -gt 0) {
+            # Extract version from latest ZIP filename
+            $latestZip = $existingZips[0].Name
+            if ($latestZip -match "$PluginSlug-([0-9]+)\.([0-9]+)\.([0-9]+)\.zip") {
+                $major = [int]$matches[1]
+                $minor = [int]$matches[2]
+                $patch = [int]$matches[3]
+                
+                # Suggest next patch version
+                return "$major.$minor.$($patch + 1)"
+            }
+        }
+    }
+    
+    # No existing ZIPs, suggest 1.0.0
+    return "1.0.0"
+}
+
+# Only prompt if version wasn't passed via command line
+if (-not $PSBoundParameters.ContainsKey('Version') -or [string]::IsNullOrWhiteSpace($PSBoundParameters['Version'])) {
+    $suggestedVersion = Get-SuggestedVersion -CurrentVersion $Version -PluginSlug $PLUGIN_SLUG
+    
+    # Check if ZIP already exists for current version
+    $currentZipPath = "$DIST_DIR\$PLUGIN_SLUG-$Version.zip"
+    if (Test-Path $currentZipPath) {
+        Write-Host ""
+        Write-Host "  ZIP already exists for version $Version" -ForegroundColor Yellow
+        Write-Host "  Suggested next version: " -NoNewline -ForegroundColor White
+        Write-Host $suggestedVersion -ForegroundColor Cyan
+        Write-Host ""
+        $userVersion = Read-Host "  Version [$suggestedVersion]"
+        if ([string]::IsNullOrWhiteSpace($userVersion)) {
+            $Version = $suggestedVersion
+        }
+        else {
+            $Version = $userVersion
+        }
+    }
+    elseif ($Version -eq "1.0.0" -and $suggestedVersion -ne "1.0.0") {
+        # Config has 1.0.0 but we have existing builds
+        Write-Host ""
+        Write-Host "  Existing builds found. Suggested version: " -NoNewline -ForegroundColor White
+        Write-Host $suggestedVersion -ForegroundColor Cyan
+        Write-Host ""
+        $userVersion = Read-Host "  Version [$suggestedVersion]"
+        if ([string]::IsNullOrWhiteSpace($userVersion)) {
+            $Version = $suggestedVersion
+        }
+        else {
+            $Version = $userVersion
+        }
+    }
+}
+
+# ============================================================================
 # Helper Functions
 # ============================================================================
 
