@@ -2,21 +2,20 @@ name: Packagist Update
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
 
 jobs:
   packagist:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug token presence
-        run: |
-          if [ -z "${{ secrets.PACKAGIST_TOKEN }}" ]; then
-            echo "PACKAGIST_TOKEN is EMPTY or not available"
-            exit 1
-          fi
-          echo "PACKAGIST_TOKEN is present"
-
       - name: Notify Packagist
         run: |
-          curl -sS -X POST https://packagist.org/api/update-package \
+          curl -sS -X POST "https://packagist.org/api/update-package" \
             -H "Content-Type: application/json" \
-            -d '{"username":"YOUR_PACKAGIST_USERNAME","apiToken":"${{ secrets.PACKAGIST_TOKEN }}","repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
+            -H "User-Agent: github-actions (mailto:diggerwp@gmail.com)" \
+            -H "Authorization: Bearer WPDiggerStudio:${{ secrets.PACKAGIST_TOKEN }}" \
+            -d '{"repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
