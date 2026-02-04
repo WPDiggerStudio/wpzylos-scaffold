@@ -70,7 +70,15 @@ After creating your project, run the **Scaffold CLI** to customize and manage yo
 .\scaffold.ps1 build     # Build for production directly
 ```
 
-**Linux/Mac:**
+**Windows (Command Prompt):**
+
+```cmd
+powershell -ExecutionPolicy Bypass -File scaffold.ps1
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 init
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 build
+```
+
+**Linux/Mac (or Git Bash on Windows):**
 
 ```bash
 chmod +x scaffold.sh
@@ -138,9 +146,22 @@ your-plugin/
 
 Run the Scaffold CLI for automated setup:
 
+**PowerShell:**
+
 ```powershell
-.\scaffold.ps1 init      # Windows
-./scaffold.sh init          # Linux/Mac
+.\scaffold.ps1 init
+```
+
+**Command Prompt:**
+
+```cmd
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 init
+```
+
+**Linux/Mac/Git Bash:**
+
+```bash
+./scaffold.sh init
 ```
 
 ### Manual
@@ -302,7 +323,15 @@ Use the Scaffold CLI for production builds:
 .\scaffold.ps1 build -SkipScoper  # Dev build (skip PHP-Scoper)
 ```
 
-**Linux/Mac:**
+**Windows (Command Prompt):**
+
+```cmd
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 build
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 build -SkipQA
+powershell -ExecutionPolicy Bypass -File scaffold.ps1 build -SkipScoper
+```
+
+**Linux/Mac (or Git Bash):**
 
 ```bash
 ./scaffold.sh build              # Full build (QA + Scoper + ZIP)
