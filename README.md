@@ -19,7 +19,7 @@ Template repository for creating **production-ready WordPress plugins** with MVC
 - **Service Providers** — Modular dependency injection
 - **Database Migrations** — Version-controlled schema changes
 - **WordPress Compliant** — Proper headers, MIT license, readme.txt
-- **Build Pipeline** — Makefile for development and distribution
+- **Build Pipeline** — Scaffold CLI with QA checks and ZIP creation
 - **Security First** — Nonce verification, capability checks, input sanitization
 
 ---
@@ -58,6 +58,36 @@ rm -rf .git
 composer install
 ```
 
+### Initialize Your Plugin (Recommended)
+
+After creating your project, run the **scaffold CLI** to customize and manage your plugin:
+
+**Windows (PowerShell):**
+
+```powershell
+.\scaffold.ps1           # Interactive menu
+.\scaffold.ps1 init      # Initialize plugin directly
+.\scaffold.ps1 build     # Build for production directly
+```
+
+**Linux/Mac:**
+
+```bash
+chmod +x scaffold
+./scaffold               # Interactive menu
+./scaffold init          # Initialize plugin directly
+./scaffold build         # Build for production directly
+```
+
+The script will:
+
+1. Prompt for your plugin name (e.g., "WP BRA Calculator")
+2. Auto-derive slug, namespace, prefixes, and vendor name
+3. Update `composer.json` package name
+4. Perform all search-and-replace operations
+5. Rename the main plugin file
+6. Save configuration to `.plugin-config.json` (used by build script)
+
 ---
 
 ## 📁 Project Structure
@@ -86,10 +116,14 @@ your-plugin/
 │   └── web.php                 # Route definitions
 ├── tests/
 │   └── Unit/                   # PHPUnit tests
+├── scaffold.ps1                # Scaffold CLI (Windows)
+├── scaffold                    # Scaffold CLI (Linux/Mac)
+├── .scripts/                   # CLI scripts
+│   ├── init-plugin.ps1/.sh     # Initialization logic
+│   └── build.ps1/.sh           # Build pipeline logic
 ├── your-plugin.php             # Main plugin entry point
 ├── uninstall.php               # WordPress uninstall handler
 ├── scoper.inc.php              # PHP-Scoper configuration
-├── Makefile                    # Build automation
 ├── composer.json               # Dependencies
 └── readme.txt                  # WordPress.org readme
 ```
@@ -98,7 +132,18 @@ your-plugin/
 
 ## 🔧 Customization
 
-After copying the scaffold, perform a search and replace:
+### Automated (Recommended)
+
+Run the Scaffold CLI for automated setup:
+
+```powershell
+.\scaffold.ps1 init      # Windows
+./scaffold init          # Linux/Mac
+```
+
+### Manual
+
+If you prefer manual customization, perform search and replace:
 
 | Find        | Replace With  | Description                            |
 | ----------- | ------------- | -------------------------------------- |
@@ -108,12 +153,12 @@ After copying the scaffold, perform a search and replace:
 | `myplugin_` | `yourplugin_` | Database/option prefix                 |
 | `My Plugin` | `Your Plugin` | Display name                           |
 
-### Files to Update
+#### Files to Update
 
 1. **`your-plugin.php`** — Plugin headers, PluginContext configuration
 2. **`composer.json`** — Package name, namespace in autoload
 3. **`scoper.inc.php`** — Scoper prefix variable
-4. **`Makefile`** — PLUGIN_SLUG variable
+4. **`.plugin-config.json`** — Created by init, used by build
 5. **`uninstall.php`** — Context configuration
 
 ---
@@ -239,23 +284,42 @@ return static function (Router $router): void {
 
 ```bash
 composer install          # Install all dependencies
-make dev                  # Install dev dependencies
-make test                 # Run PHPUnit tests
-make lint                 # Run code style checks
-make analyze              # Run PHPStan analysis
+composer test             # Run PHPUnit tests
+composer analyze          # Run PHPStan analysis
 ```
 
 ### Production Build
 
-```bash
-make all                  # Full build pipeline
-# Or step by step:
-make clean                # Remove build artifacts
-make install              # Install production dependencies
-make scope                # Run PHP-Scoper
-make build                # Prepare build directory
-make dist                 # Create distributable ZIP
+Use the Scaffold CLI for production builds:
+
+**Windows (PowerShell):**
+
+```powershell
+.\scaffold.ps1 build              # Full build (QA + Scoper + ZIP)
+.\scaffold.ps1 build -SkipQA      # Skip code style/analysis checks
+.\scaffold.ps1 build -SkipScoper  # Dev build (skip PHP-Scoper)
 ```
+
+**Linux/Mac:**
+
+```bash
+./scaffold build              # Full build (QA + Scoper + ZIP)
+./scaffold build --skip-qa    # Skip code style/analysis checks
+./scaffold build --skip-scoper  # Dev build (skip PHP-Scoper)
+```
+
+The build script will:
+
+1. Clean previous build artifacts
+2. Run `phpcbf --standard=PSR12` (code style fix)
+3. Run `phpstan analyze` (static analysis)
+4. Install production dependencies
+5. Run PHP-Scoper for namespace isolation
+6. Copy required files & rebuild autoloader
+7. Remove development files
+8. Create versioned ZIP in `dist/`
+
+> **Note:** The build script reads configuration from `.plugin-config.json` (created by `scaffold init`).
 
 The production build creates a zip file at `dist/your-plugin-1.0.0.zip` ready for deployment.
 

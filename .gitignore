@@ -114,3 +114,4 @@ phpstan.neon
 
 # Local configuration
 *.local.php
+.plugin-config.json

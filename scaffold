@@ -1,0 +1,140 @@
+#!/bin/bash
+# ============================================================================
+# WPZylos Scaffold CLI
+# ============================================================================
+# Single command to manage your WPZylos plugin scaffold.
+#
+# Usage:
+#   ./scaffold           # Interactive menu
+#   ./scaffold init      # Initialize plugin
+#   ./scaffold build     # Build for production
+# ============================================================================
+
+set -e
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+SCRIPTS_DIR=".scripts"
+VERSION="1.0.0"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+GRAY='\033[0;37m'
+WHITE='\033[1;37m'
+NC='\033[0m'
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+print_logo() {
+    echo ""
+    echo -e "${CYAN}  __          _______   _____      _            ${NC}"
+    echo -e "${CYAN}  \\ \\        / /  __ \\ |___  |    | |           ${NC}"
+    echo -e "${CYAN}   \\ \\  /\\  / /| |__) |   / / ___ | | ___  ___  ${NC}"
+    echo -e "${CYAN}    \\ \\/  \\/ / |  ___/   / / / _ \\| |/ _ \\/ __| ${NC}"
+    echo -e "${CYAN}     \\  /\\  /  | |      / /_| (_) | | (_) \\__ \\ ${NC}"
+    echo -e "${CYAN}      \\/  \\/   |_|     /_____\\___/|_|\\___/|___/ ${NC}"
+    echo ""
+    echo -e "  ${GRAY}WPZylos Scaffold CLI v$VERSION${NC}"
+    echo ""
+}
+
+print_menu() {
+    echo -e "  ${WHITE}What would you like to do?${NC}"
+    echo ""
+    echo -e "    ${YELLOW}[1]${NC} ${WHITE}Initialize Plugin${NC}"
+    echo -e "        ${GRAY}Set up plugin name, namespace, and configuration${NC}"
+    echo ""
+    echo -e "    ${YELLOW}[2]${NC} ${WHITE}Build for Production${NC}"
+    echo -e "        ${GRAY}Run QA checks, scope dependencies, create ZIP${NC}"
+    echo ""
+    echo -e "    ${YELLOW}[0]${NC} ${WHITE}Exit${NC}"
+    echo ""
+}
+
+get_plugin_status() {
+    if [[ -f ".plugin-config.json" ]]; then
+        PLUGIN_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
+        PLUGIN_SLUG=$(grep -o '"slug": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        echo -e "  ${GRAY}Current Plugin:${NC} ${GREEN}$PLUGIN_NAME${NC}"
+        echo -e "  ${GRAY}Slug:${NC} ${WHITE}$PLUGIN_SLUG${NC}"
+        echo ""
+    else
+        echo -e "  ${GRAY}Status:${NC} ${YELLOW}Not initialized${NC}"
+        echo -e "  ${GRAY}Run 'init' to set up your plugin${NC}"
+        echo ""
+    fi
+}
+
+run_init() {
+    local script="$SCRIPTS_DIR/init-plugin.sh"
+    if [[ -f "$script" ]]; then
+        bash "$script" "$@"
+    else
+        echo -e "${RED}Error: init-plugin.sh not found in $SCRIPTS_DIR${NC}"
+        exit 1
+    fi
+}
+
+run_build() {
+    local script="$SCRIPTS_DIR/build.sh"
+    if [[ -f "$script" ]]; then
+        bash "$script" "$@"
+    else
+        echo -e "${RED}Error: build.sh not found in $SCRIPTS_DIR${NC}"
+        exit 1
+    fi
+}
+
+# ============================================================================
+# Main
+# ============================================================================
+
+ACTION="${1:-}"
+shift 2>/dev/null || true
+
+# Handle direct action
+case "$ACTION" in
+    init)
+        run_init "$@"
+        exit $?
+        ;;
+    build)
+        run_build "$@"
+        exit $?
+        ;;
+esac
+
+# Interactive menu
+print_logo
+get_plugin_status
+print_menu
+
+read -p "  Enter choice [0-2]: " choice
+
+case "$choice" in
+    1)
+        echo ""
+        run_init
+        ;;
+    2)
+        echo ""
+        run_build
+        ;;
+    0)
+        echo ""
+        echo -e "  ${CYAN}Goodbye!${NC}"
+        exit 0
+        ;;
+    *)
+        echo ""
+        echo -e "  ${RED}Invalid choice. Please enter 0, 1, or 2.${NC}"
+        exit 1
+        ;;
+esac
