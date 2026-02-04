@@ -96,17 +96,28 @@ read_with_default() {
     echo "${input:-$default}"
 }
 
+# Escape string for use in sed replacement
+# Escapes: backslash, ampersand, and the delimiter (|)
+escape_for_sed() {
+    local str="$1"
+    # First escape backslashes, then ampersand, then pipe (our delimiter)
+    printf '%s' "$str" | sed -e 's/\\/\\\\/g' -e 's/[&|]/\\&/g'
+}
+
 # Replace in file (handles backslashes properly)
 replace_in_file() {
     local file="$1"
     local find="$2"
     local replace="$3"
     if [[ -f "$file" ]]; then
-        local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
+        local escaped_find
+        local escaped_replace
+        escaped_find=$(escape_for_sed "$find")
+        escaped_replace=$(escape_for_sed "$replace")
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|${find}|${escaped_replace}|g" "$file"
+            sed -i '' "s|${escaped_find}|${escaped_replace}|g" "$file"
         else
-            sed -i "s|${find}|${escaped_replace}|g" "$file"
+            sed -i "s|${escaped_find}|${escaped_replace}|g" "$file"
         fi
     fi
 }
@@ -115,14 +126,17 @@ replace_in_file() {
 replace_in_all_files() {
     local find="$1"
     local replace="$2"
-    local escaped_replace=$(printf '%s\n' "$replace" | sed 's/[\\&]/\\&/g')
+    local escaped_find
+    local escaped_replace
+    escaped_find=$(escape_for_sed "$find")
+    escaped_replace=$(escape_for_sed "$replace")
     find . -type f \( -name "*.php" -o -name "*.json" -o -name "*.txt" -o -name "*.md" \) \
         -not -path "./vendor/*" -not -path "./.git/*" -not -path "./.scripts/*" | while read -r file; do
         if grep -qF "$find" "$file" 2>/dev/null; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s|${find}|${escaped_replace}|g" "$file"
+                sed -i '' "s|${escaped_find}|${escaped_replace}|g" "$file"
             else
-                sed -i "s|${find}|${escaped_replace}|g" "$file"
+                sed -i "s|${escaped_find}|${escaped_replace}|g" "$file"
             fi
         fi
     done
@@ -130,6 +144,10 @@ replace_in_all_files() {
 
 # Save plugin config to JSON
 save_plugin_config() {
+    # Escape backslashes for JSON (single backslash becomes double)
+    local json_namespace
+    json_namespace=$(printf '%s' "$NAMESPACE" | sed 's/\\/\\\\/g')
+    
     cat > .plugin-config.json << EOF
 {
   "initialized": true,
@@ -137,7 +155,7 @@ save_plugin_config() {
   "plugin": {
     "name": "$PLUGIN_NAME",
     "slug": "$PLUGIN_SLUG",
-    "namespace": "$NAMESPACE",
+    "namespace": "$json_namespace",
     "scoperPrefix": "$SCOPER_PREFIX",
     "dbPrefix": "$DB_PREFIX",
     "version": "$VERSION",
@@ -173,7 +191,8 @@ detect_state() {
         HAS_CONFIG=true
         CURRENT_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
         CURRENT_SLUG=$(grep -o '"slug": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
-        CURRENT_NAMESPACE=$(grep -o '"namespace": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        # Namespace: convert JSON escaped \\ back to single \
+        CURRENT_NAMESPACE=$(grep -o '"namespace": "[^"]*"' .plugin-config.json | cut -d'"' -f4 | sed 's/\\\\/\\/g')
         CURRENT_SCOPER_PREFIX=$(grep -o '"scoperPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_DB_PREFIX=$(grep -o '"dbPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_AUTHOR_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | tail -1 | cut -d'"' -f4)
