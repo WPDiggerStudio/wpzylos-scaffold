@@ -131,6 +131,22 @@ try {
         }
     }
 
+    # Replace literal string in file (no regex, uses .NET String.Replace)
+    # Use this for simple version replacements to avoid regex edge cases
+    function Replace-Literal {
+        param(
+            [string]$FilePath,
+            [string]$Find,
+            [string]$Replace
+        )
+        if (Test-Path $FilePath) {
+            $fullPath = (Resolve-Path $FilePath).Path
+            $content = [System.IO.File]::ReadAllText($fullPath, $Utf8NoBom)
+            $content = $content.Replace($Find, $Replace)
+            [System.IO.File]::WriteAllText($fullPath, $content, $Utf8NoBom)
+        }
+    }
+
     function Replace-InAllFiles {
         param(
             [string]$Find,
@@ -501,12 +517,12 @@ try {
     # Get the actual main plugin file from config (after possible rename)
     $actualMainFile = if ($PluginSlug -ne $oldSlug -and (Test-Path "$PluginSlug.php")) { "$PluginSlug.php" } else { $mainPluginFile }
     if ($Version -ne $oldVersion) {
-        # Update plugin header Version (format: "* Version: X.X.X")
-        Replace-InFile -FilePath $actualMainFile -Find "Version: $oldVersion" -Replace "Version: $Version"
+        # Update plugin header Version (format: "* Version: X.X.X") - use Replace-Literal for exact match
+        Replace-Literal -FilePath $actualMainFile -Find "Version: $oldVersion" -Replace "Version: $Version"
         # Update PluginContext version (format: "'version' => 'X.X.X'")
-        Replace-InFile -FilePath $actualMainFile -Find "'version' => '$oldVersion'" -Replace "'version' => '$Version'"
+        Replace-Literal -FilePath $actualMainFile -Find "'version' => '$oldVersion'" -Replace "'version' => '$Version'"
         # Update readme.txt Stable tag
-        Replace-InFile -FilePath "readme.txt" -Find "Stable tag: $oldVersion" -Replace "Stable tag: $Version"
+        Replace-Literal -FilePath "readme.txt" -Find "Stable tag: $oldVersion" -Replace "Stable tag: $Version"
         Write-Done
     }
     else {

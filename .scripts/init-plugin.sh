@@ -126,6 +126,18 @@ escape_for_sed() {
     printf '%s' "$str" | sed -e 's/\\/\\\\/g' -e 's/[&|]/\\&/g'
 }
 
+# Replace literal string in file (no regex, uses awk for safety)
+# Use this for simple version replacements to avoid sed regex issues
+replace_literal() {
+    local file="$1"
+    local find="$2"
+    local replace="$3"
+    if [[ -f "$file" ]]; then
+        local tmp_file="${file}.tmp"
+        awk -v find="$find" -v replace="$replace" '{gsub(find, replace)}1' "$file" > "$tmp_file" && mv "$tmp_file" "$file"
+    fi
+}
+
 # Replace in file (handles backslashes properly)
 replace_in_file() {
     local file="$1"
@@ -518,12 +530,12 @@ else
     ACTUAL_MAIN_FILE="$MAIN_PLUGIN_FILE"
 fi
 if [[ "$VERSION" != "$OLD_VERSION" ]]; then
-    # Update plugin header Version (format: "* Version: X.X.X")
-    replace_in_file "$ACTUAL_MAIN_FILE" "Version: $OLD_VERSION" "Version: $VERSION"
+    # Update plugin header Version (format: "* Version: X.X.X") - use replace_literal to avoid sed regex issues
+    replace_literal "$ACTUAL_MAIN_FILE" "Version: $OLD_VERSION" "Version: $VERSION"
     # Update PluginContext version (format: "'version' => 'X.X.X'")
-    replace_in_file "$ACTUAL_MAIN_FILE" "'version' => '$OLD_VERSION'" "'version' => '$VERSION'"
+    replace_literal "$ACTUAL_MAIN_FILE" "'version' => '$OLD_VERSION'" "'version' => '$VERSION'"
     # Update readme.txt Stable tag
-    replace_in_file "readme.txt" "Stable tag: $OLD_VERSION" "Stable tag: $VERSION"
+    replace_literal "readme.txt" "Stable tag: $OLD_VERSION" "Stable tag: $VERSION"
     print_done
 else
     print_skip
