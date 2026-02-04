@@ -96,6 +96,15 @@ read_with_default() {
     echo "${input:-$default}"
 }
 
+# Normalize namespace: convert any number of consecutive backslashes to single
+# Handles: \ , \\ , \\\ all become single \
+normalize_namespace() {
+    local ns="$1"
+    # Replace 3+ backslashes with single, then 2 with single
+    # This handles \\\ -> \ and \\ -> \ while preserving single \
+    printf '%s' "$ns" | sed -e 's/\\\\\\\\/\\/g' -e 's/\\\\/\\/g'
+}
+
 # Escape string for use in sed replacement
 # Escapes: backslash, ampersand, and the delimiter (|)
 escape_for_sed() {
@@ -191,8 +200,10 @@ detect_state() {
         HAS_CONFIG=true
         CURRENT_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | head -1 | cut -d'"' -f4)
         CURRENT_SLUG=$(grep -o '"slug": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
-        # Namespace: convert JSON escaped \\ back to single \
-        CURRENT_NAMESPACE=$(grep -o '"namespace": "[^"]*"' .plugin-config.json | cut -d'"' -f4 | sed 's/\\\\/\\/g')
+        # Namespace: read from JSON and normalize (handles \\ or \\\\)
+        local raw_ns
+        raw_ns=$(grep -o '"namespace": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
+        CURRENT_NAMESPACE=$(normalize_namespace "$raw_ns")
         CURRENT_SCOPER_PREFIX=$(grep -o '"scoperPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_DB_PREFIX=$(grep -o '"dbPrefix": "[^"]*"' .plugin-config.json | cut -d'"' -f4)
         CURRENT_AUTHOR_NAME=$(grep -o '"name": "[^"]*"' .plugin-config.json | tail -1 | cut -d'"' -f4)
@@ -214,7 +225,9 @@ detect_state() {
             CURRENT_NAME=$(grep -oP "Plugin Name:\s*\K.*" "$MAIN_FILE" | head -1 | xargs)
             # Try to detect namespace from composer.json
             if [[ -f "composer.json" ]]; then
-                CURRENT_NAMESPACE=$(grep -oP '"[^"]+\\\\\\\\": "app/"' composer.json 2>/dev/null | head -1 | cut -d'"' -f2 | sed 's/\\\\//g')
+                local raw_ns_composer
+                raw_ns_composer=$(grep -oP '"[^"]+\\\\\\\\": "app/"' composer.json 2>/dev/null | head -1 | cut -d'"' -f2)
+                CURRENT_NAMESPACE=$(normalize_namespace "$raw_ns_composer")
             fi
         fi
     fi
@@ -299,6 +312,8 @@ echo "Derived/Current values (press Enter to accept, or type to override):"
 
 PLUGIN_SLUG=$(read_with_default "  Plugin Slug" "$DERIVED_SLUG")
 NAMESPACE=$(read_with_default "  PHP Namespace" "$DERIVED_NAMESPACE")
+# Normalize namespace: convert \\ or \\\ to single \
+NAMESPACE=$(normalize_namespace "$NAMESPACE")
 SCOPER_PREFIX=$(read_with_default "  Scoper Prefix" "$DERIVED_SCOPER_PREFIX")
 DB_PREFIX=$(read_with_default "  Database Prefix" "$DERIVED_DB_PREFIX")
 
