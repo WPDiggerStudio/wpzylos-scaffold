@@ -330,7 +330,7 @@ try {
         else {
             $newDefaultVendor = $defaultVendor
         }
-        $VendorName = Read-WithDefault "  Vendor Name (for composer)" $newDefaultVendor
+        $VendorName = (Read-WithDefault "  Vendor Name (for composer)" $newDefaultVendor).ToLower() -replace '[^a-z0-9]', ''
     
         Write-Host ""
         Write-Host "Summary:" -ForegroundColor White

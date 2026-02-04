@@ -342,7 +342,7 @@ if [[ "$AUTHOR_NAME" != "$DEFAULT_AUTHOR_NAME" ]]; then
 else
     NEW_DEFAULT_VENDOR="$DEFAULT_VENDOR"
 fi
-VENDOR_NAME=$(read_with_default "  Vendor Name (for composer)" "$NEW_DEFAULT_VENDOR")
+VENDOR_NAME=$(read_with_default "  Vendor Name (for composer)" "$NEW_DEFAULT_VENDOR" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
 
 VERSION="${CURRENT_VERSION:-1.0.0}"
 
