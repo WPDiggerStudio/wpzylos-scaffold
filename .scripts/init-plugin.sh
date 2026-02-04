@@ -126,15 +126,15 @@ escape_for_sed() {
     printf '%s' "$str" | sed -e 's/\\/\\\\/g' -e 's/[&|]/\\&/g'
 }
 
-# Replace literal string in file (no regex, uses awk for safety)
-# Use this for simple version replacements to avoid sed regex issues
+# Replace literal string in file (no regex, uses Perl for true literal matching)
+# Use this for simple version replacements to avoid sed/awk regex issues
 replace_literal() {
     local file="$1"
     local find="$2"
     local replace="$3"
     if [[ -f "$file" ]]; then
-        local tmp_file="${file}.tmp"
-        awk -v find="$find" -v replace="$replace" '{gsub(find, replace)}1' "$file" > "$tmp_file" && mv "$tmp_file" "$file"
+        # Use Perl with quotemeta (\Q...\E) for true literal string matching
+        FIND="$find" REPLACE="$replace" perl -i -pe 's/\Q$ENV{FIND}\E/$ENV{REPLACE}/g' "$file"
     fi
 }
 
