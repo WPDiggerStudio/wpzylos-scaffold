@@ -16,7 +16,6 @@ jobs:
         run: |
           echo "USERNAME length: ${#PACKAGIST_USERNAME}"
           echo "TOKEN length: ${#PACKAGIST_TOKEN}"
-          echo "Repository: ${{ github.server_url }}/${{ github.repository }}"
         env:
           PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
           PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
@@ -25,7 +24,6 @@ jobs:
         run: |
           curl --fail-with-body -sS -X POST "https://packagist.org/api/update-package" \
             -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
             -H "Authorization: Bearer ${{ secrets.PACKAGIST_USERNAME }}:${{ secrets.PACKAGIST_TOKEN }}" \
             -H "User-Agent: github-actions (mailto:diggerwp@gmail.com)" \
-            -d '{"repository":"${{ github.server_url }}/${{ github.repository }}"}'
+            -d '{"repository":"https://github.com/WPDiggerStudio/wpzylos-scaffold"}'
