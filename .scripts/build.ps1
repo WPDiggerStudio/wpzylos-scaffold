@@ -276,7 +276,8 @@ $essentialFiles = @(
     $MAIN_FILE,
     "uninstall.php",
     "readme.txt",
-    "LICENSE"
+    "LICENSE",
+    "composer.json"
 )
 
 foreach ($file in $essentialFiles) {

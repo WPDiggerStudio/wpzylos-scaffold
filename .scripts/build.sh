@@ -238,7 +238,7 @@ fi
 # Step 5: Copy essential files
 print_step "Copying essential files..."
 
-for file in "$MAIN_FILE" uninstall.php readme.txt LICENSE; do
+for file in "$MAIN_FILE" uninstall.php readme.txt LICENSE composer.json; do
     if [[ -f "$file" ]]; then
         cp "$file" "$BUILD_DIR/"
     fi
