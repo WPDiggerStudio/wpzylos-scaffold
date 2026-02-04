@@ -56,9 +56,6 @@
     "psr-4": {
       "MyPlugin\\": "app/"
     },
-    "classmap": [
-      "includes/"
-    ],
     "files": [
       "app/Support/helpers.php"
     ]
@@ -70,7 +67,7 @@
   },
   "scripts": {
     "test": "phpunit",
-    "analyze": "phpstan analyze app includes",
+    "analyze": "phpstan analyze app",
     "cs": "phpcs --standard=PSR12 app",
     "cs-fix": "phpcbf --standard=PSR12 app",
     "qa": ["@cs", "@analyze", "@test"]

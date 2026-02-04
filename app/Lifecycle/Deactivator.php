@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MyPlugin\Includes;
+namespace MyPlugin\Lifecycle;
 
 use MyPlugin\Core\PluginContext;
 
@@ -11,7 +11,7 @@ use MyPlugin\Core\PluginContext;
  *
  * Handles cleanup when plugin is deactivated.
  *
- * @package MyPlugin\Includes
+ * @package MyPlugin\Lifecycle
  */
 class Deactivator
 {

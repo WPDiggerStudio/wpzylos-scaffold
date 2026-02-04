@@ -16,7 +16,7 @@ defined('WP_UNINSTALL_PLUGIN') || exit;
 require_once __DIR__ . '/vendor/autoload.php';
 
 use MyPlugin\Core\PluginContext;
-use MyPlugin\Includes\Uninstaller;
+use MyPlugin\Lifecycle\Uninstaller;
 
 // Create context
 $context = PluginContext::create([

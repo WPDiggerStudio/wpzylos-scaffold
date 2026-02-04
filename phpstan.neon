@@ -5,7 +5,6 @@ parameters:
     level: 5
     paths:
         - app
-        - includes
     excludePaths:
         - tests
     ignoreErrors:
@@ -16,5 +15,5 @@ parameters:
             path: app/Core/PluginContext.php
         -
             message: '#Empty array passed to foreach#'
-            path: includes/Uninstaller.php
+            path: app/Lifecycle/Uninstaller.php
     reportUnmatchedIgnoredErrors: false

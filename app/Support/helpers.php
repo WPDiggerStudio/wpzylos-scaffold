@@ -14,7 +14,7 @@ declare(strict_types=1);
 // Template Escape Helpers (required for all templates)
 // =========================================================================
 
-if (! function_exists('zylos_e')) {
+if (!function_exists('zylos_e')) {
     /**
      * Escape for HTML output.
      *
@@ -28,7 +28,7 @@ if (! function_exists('zylos_e')) {
     }
 }
 
-if (! function_exists('zylos_ea')) {
+if (!function_exists('zylos_ea')) {
     /**
      * Escape for HTML attribute.
      *
@@ -42,7 +42,7 @@ if (! function_exists('zylos_ea')) {
     }
 }
 
-if (! function_exists('zylos_eu')) {
+if (!function_exists('zylos_eu')) {
     /**
      * Escape URL.
      *
@@ -56,7 +56,7 @@ if (! function_exists('zylos_eu')) {
     }
 }
 
-if (! function_exists('zylos_ej')) {
+if (!function_exists('zylos_ej')) {
     /**
      * Escape for JavaScript.
      *
@@ -70,7 +70,7 @@ if (! function_exists('zylos_ej')) {
     }
 }
 
-if (! function_exists('zylos_kses')) {
+if (!function_exists('zylos_kses')) {
     /**
      * Filter HTML to allowed tags.
      *
@@ -93,7 +93,7 @@ if (! function_exists('zylos_kses')) {
 // App Helpers (use after bootstrap)
 // =========================================================================
 
-if (! function_exists('zylos_app')) {
+if (!function_exists('zylos_app')) {
     /**
      * Get the application instance or resolve a service.
      *
@@ -113,7 +113,7 @@ if (! function_exists('zylos_app')) {
     }
 }
 
-if (! function_exists('context')) {
+if (!function_exists('context')) {
     /**
      * Get the plugin context.
      *
@@ -127,7 +127,7 @@ if (! function_exists('context')) {
     }
 }
 
-if (! function_exists('zylos_m')) {
+if (!function_exists('zylos_m')) {
     /**
      * Translate with plugin text domain.
      *
@@ -143,7 +143,7 @@ if (! function_exists('zylos_m')) {
     }
 }
 
-if (! function_exists('zylos_em')) {
+if (!function_exists('zylos_em')) {
     /**
      * Echo translated text with the plugin text domain.
      *

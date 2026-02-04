@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MyPlugin\Includes;
+namespace MyPlugin\Lifecycle;
 
 use MyPlugin\Core\PluginContext;
 
@@ -12,7 +12,7 @@ use MyPlugin\Core\PluginContext;
  * Handles complete data removal when plugin is deleted
  * and user has opted to remove data.
  *
- * @package MyPlugin\Includes
+ * @package MyPlugin\Lifecycle
  */
 class Uninstaller
 {
@@ -109,7 +109,7 @@ class Uninstaller
 
         foreach ($tables as $table) {
             $tableName = $context->tableName($table);
-			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $wpdb->query("DROP TABLE IF EXISTS {$tableName}");
         }
     }

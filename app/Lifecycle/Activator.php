@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MyPlugin\Includes;
+namespace MyPlugin\Lifecycle;
 
 use MyPlugin\Core\PluginContext;
 use WPZylos\Framework\Routing\MinimalRouter;
@@ -14,7 +14,7 @@ use WPZylos\Framework\Routing\WPAdapter;
  * Handles plugin activation tasks like registering rewrite rules
  * and checking requirements.
  *
- * @package MyPlugin\Includes
+ * @package MyPlugin\Lifecycle
  */
 class Activator
 {
@@ -28,12 +28,12 @@ class Activator
     public static function activate(PluginContext $context): void
     {
         // Check requirements
-        if (! self::checkRequirements()) {
+        if (!self::checkRequirements()) {
             deactivate_plugins(plugin_basename($context->file()));
             wp_die(
                 esc_html__('This plugin requires PHP 8.0+ and WordPress 6.0+', $context->textDomain()),
                 esc_html__('Plugin Activation Error', $context->textDomain()),
-                [ 'back_link' => true ]
+                ['back_link' => true]
             );
         }
 
@@ -58,7 +58,7 @@ class Activator
     private static function checkRequirements(): bool
     {
         $phpVersion = '8.0';
-        $wpVersion  = '6.0';
+        $wpVersion = '6.0';
 
         if (version_compare(PHP_VERSION, $phpVersion, '<')) {
             return false;
@@ -82,14 +82,14 @@ class Activator
     {
         $routesPath = $context->path('routes/web.php');
 
-        if (! file_exists($routesPath)) {
+        if (!file_exists($routesPath)) {
             return;
         }
 
         // Load routes using minimal router (no container boot)
         $callback = require $routesPath;
 
-        if (! is_callable($callback)) {
+        if (!is_callable($callback)) {
             return;
         }
 
